@@ -1,3 +1,3 @@
-from .bedrock_service import bedrock_service, BedrockService
+from .openai_service import openai_service, OpenAIService
 
-__all__ = ["bedrock_service", "BedrockService"]
+__all__ = ["openai_service", "OpenAIService"]
