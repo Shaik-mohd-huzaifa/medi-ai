@@ -1,6 +1,6 @@
-# Medi-AI: Full-Stack AI Chat Application
+# Medi-AI: Full-Stack Medical AI Assistant
 
-A production-ready full-stack application with a Vue.js frontend and FastAPI backend, integrated with AWS Bedrock and Claude 3.5 Sonnet for AI-powered conversations.
+A production-ready full-stack application with a Next.js frontend and FastAPI backend, integrated with AWS Bedrock and Claude 3.5 Sonnet for AI-powered medical assistance.
 
 ## 🌟 Features
 
@@ -13,13 +13,16 @@ A production-ready full-stack application with a Vue.js frontend and FastAPI bac
 - **Configuration Management**: Environment-based configuration
 - **CORS Support**: Configurable CORS middleware
 
-### Frontend (Vue.js)
-- **Modern Chat Interface**: Beautiful, responsive chat UI
-- **Real-time Messaging**: Instant message updates and typing indicators
-- **Message Formatting**: Support for bold, italic, and code formatting
-- **Example Prompts**: Quick-start conversation starters
-- **Health Monitoring**: Real-time backend connection status
-- **Responsive Design**: Works seamlessly on desktop and mobile
+### Frontend (Next.js + shadcn/ui)
+- **Medical Dashboard**: Professional healthcare dashboard interface
+- **Voice Call Interface**: Speech-to-text and text-to-speech capabilities
+- **Medical Records Management**: View and manage health records
+- **Appointment Scheduling**: Track doctor appointments and consultations
+- **Medical Alerts**: Medication reminders and health notifications
+- **Emergency Contacts**: Quick access to emergency services
+- **AI Chat Integration**: Real-time AI medical assistance
+- **Modern UI**: Built with shadcn/ui components and Tailwind CSS
+- **Fully Responsive**: Works seamlessly on all devices
 
 ## 📁 Project Structure
 
@@ -38,17 +41,23 @@ medi-ai/
 │   └── services/
 │       ├── __init__.py
 │       └── bedrock_service.py  # AWS Bedrock service
-├── frontend/                   # Frontend (Vue.js)
+├── frontend/                   # Frontend (Next.js)
 │   ├── src/
-│   │   ├── components/
-│   │   │   └── ChatInterface.vue
+│   │   ├── app/                # Next.js App Router
+│   │   │   ├── page.tsx        # Main dashboard page
+│   │   │   ├── layout.tsx      # Root layout
+│   │   │   └── globals.css     # Global styles
+│   │   ├── components/         # React components
+│   │   │   ├── ui/             # shadcn/ui components
+│   │   │   ├── MedicalDashboard.tsx
+│   │   │   └── VoiceCallModal.tsx
 │   │   ├── services/
-│   │   │   └── api.js
-│   │   ├── App.vue
-│   │   ├── main.js
-│   │   └── style.css
-│   ├── index.html
-│   ├── vite.config.js
+│   │   │   └── api.ts          # API client
+│   │   ├── types/
+│   │   │   └── speech.d.ts     # TypeScript types
+│   │   └── lib/
+│   │       └── utils.ts        # Utilities
+│   ├── next.config.js
 │   └── package.json
 ├── .env.example                # Backend environment variables
 ├── .gitignore
@@ -62,7 +71,7 @@ medi-ai/
 ### Prerequisites
 
 - Python 3.9 or higher
-- Node.js 16+ and npm/yarn
+- Node.js 18+ and npm/yarn
 - AWS Account with Bedrock access
 - AWS credentials with appropriate permissions
 
@@ -114,8 +123,10 @@ medi-ai/
    ```
 
 3. **Configure environment (optional):**
+   
+   Create a `.env.local` file with:
    ```bash
-   cp .env.example .env
+   NEXT_PUBLIC_API_URL=http://localhost:8000
    ```
 
 ## Running the Application
@@ -160,26 +171,42 @@ cd frontend
 npm run dev
 ```
 
-Then open http://localhost:3000 in your browser to use the chat interface!
+Then open http://localhost:3000 in your browser to access the medical dashboard!
 
-## Using the Chat Interface
+## Using the Medical Dashboard
 
-1. **Check Connection**: Ensure the status indicator shows "Online" in the header
-2. **Start Chatting**:
-   - Type your message in the input box
-   - Or click on an example prompt to get started
-3. **Send Messages**:
-   - Press `Enter` to send
-   - Press `Shift + Enter` for a new line
-4. **View Responses**: AI responses appear with typing indicators
-5. **Clear Chat**: Click the trash icon to clear conversation history
+### Main Features
+
+1. **Medical Records**: View and access your health records and documents
+2. **Appointments**: Check upcoming doctor appointments and join telehealth sessions
+3. **Medical Alerts**: Receive medication reminders and health notifications
+4. **Emergency Contacts**: Quick access to emergency services (911) and your healthcare providers
+
+### AI Medical Assistant
+
+**Text Input:**
+- Type your medical question or symptom description in the input bar
+- Press `Enter` to send your query
+- Receive AI-powered medical guidance
+
+**Voice Call Interface:**
+- Click the phone icon (📞) to start a voice call
+- Speak naturally to describe your symptoms
+- Listen to AI responses through text-to-speech
+- Click microphone button to toggle listening
+- End call when finished
+
+**Voice Input:**
+- Click the microphone icon (🎤) for quick voice input
+- Speak your question
+- Text will be transcribed and sent automatically
 
 **Features:**
-- Real-time message updates
-- Message timestamps
-- Character counter
-- Formatted text support (bold, italic, code)
-- Responsive design for mobile and desktop
+- Real-time speech-to-text conversion
+- Natural language understanding
+- Text-to-speech responses
+- Responsive design for all devices
+- HIPAA-aware conversational guidance
 
 ## API Endpoints
 
