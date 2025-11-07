@@ -1,179 +1,105 @@
 # Medi-AI Frontend
 
-A modern, responsive Vue.js chat interface for interacting with the Medi-AI backend powered by AWS Bedrock and Claude 3.5 Sonnet.
+Next.js frontend for the Medi-AI medical assistant application with shadcn/ui components.
 
 ## Features
 
-- 💬 **Real-time Chat Interface**: Clean and intuitive chat UI
-- 🎨 **Modern Design**: Beautiful gradient design with smooth animations
-- 📱 **Responsive**: Works seamlessly on desktop and mobile devices
-- ⚡ **Fast**: Built with Vite for lightning-fast development
-- 🔄 **Auto-scroll**: Automatically scrolls to latest messages
-- ✨ **Typing Indicators**: Visual feedback when AI is responding
-- 📝 **Message Formatting**: Support for bold, italic, and code formatting
-- 🎯 **Example Prompts**: Quick start with pre-defined prompts
-- 🚦 **Health Status**: Real-time backend connection status
-- ⌨️ **Keyboard Shortcuts**: Enter to send, Shift+Enter for new line
+- 🏥 Medical Dashboard with comprehensive UI
+- 📞 Voice Call Interface with speech recognition and synthesis
+- 🗂️ Medical Records Management
+- 📅 Appointment Scheduling
+- 🔔 Medical Alerts & Notifications
+- 🚨 Emergency Contacts
+- 💬 AI-Powered Chat Interface
+- 🎨 Modern UI with shadcn/ui and Tailwind CSS
+- 📱 Fully Responsive Design
 
 ## Tech Stack
 
-- **Vue 3**: Progressive JavaScript framework
-- **Vite**: Next generation frontend tooling
-- **Axios**: Promise-based HTTP client
-- **CSS3**: Modern styling with gradients and animations
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **HTTP Client**: Axios
+- **AI Integration**: AWS Bedrock (Claude 3.5 Sonnet)
+
+## Prerequisites
+
+- Node.js 18+ 
+- npm or yarn
+- Backend API running on port 8000
+
+## Installation
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Configure environment (optional):**
+   
+   Create a `.env.local` file in the frontend directory:
+   ```bash
+   NEXT_PUBLIC_API_URL=http://localhost:8000
+   ```
+
+## Running the Application
+
+**Development mode:**
+```bash
+npm run dev
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000)
+
+**Production build:**
+```bash
+npm run build
+npm start
+```
 
 ## Project Structure
 
 ```
 frontend/
-├── public/              # Static assets
 ├── src/
-│   ├── components/
-│   │   └── ChatInterface.vue  # Main chat component
-│   ├── services/
-│   │   └── api.js            # API service layer
-│   ├── App.vue               # Root component
-│   ├── main.js               # Application entry point
-│   └── style.css             # Global styles
-├── index.html
-├── vite.config.js
-├── package.json
-└── README.md
+│   ├── app/              # Next.js App Router pages
+│   │   ├── page.tsx      # Main dashboard page
+│   │   ├── layout.tsx    # Root layout
+│   │   └── globals.css   # Global styles
+│   ├── components/       # React components
+│   │   ├── ui/           # shadcn/ui components
+│   │   ├── MedicalDashboard.tsx
+│   │   └── VoiceCallModal.tsx
+│   ├── services/         # API services
+│   │   └── api.ts        # Bedrock API client
+│   ├── types/            # TypeScript definitions
+│   │   └── speech.d.ts   # Web Speech API types
+│   └── lib/              # Utilities
+│       └── utils.ts      # Helper functions
+├── public/               # Static assets
+└── package.json          # Dependencies
 ```
 
-## Prerequisites
+## Features Overview
 
-- Node.js 16+ and npm/yarn
-- Running Medi-AI backend (see backend README)
+### Medical Dashboard
+- View medical records
+- Manage appointments
+- Track medication reminders
+- Access emergency contacts
 
-## Installation
+### Voice Call Interface
+- Real-time speech-to-text
+- Text-to-speech responses
+- Hands-free medical consultation
+- Natural conversation flow
 
-1. **Navigate to frontend directory:**
-   ```bash
-   cd frontend
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-   or
-   ```bash
-   yarn install
-   ```
-
-3. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   ```
-
-   Edit `.env` if needed:
-   ```
-   VITE_API_URL=http://localhost:8000
-   ```
-
-## Development
-
-**Start the development server:**
-```bash
-npm run dev
-```
-or
-```bash
-yarn dev
-```
-
-The application will be available at http://localhost:3000
-
-**Hot Module Replacement (HMR)** is enabled, so changes will reflect instantly.
-
-## Building for Production
-
-**Create production build:**
-```bash
-npm run build
-```
-or
-```bash
-yarn build
-```
-
-The optimized files will be in the `dist/` directory.
-
-**Preview production build:**
-```bash
-npm run preview
-```
-
-## Usage
-
-### Starting a Conversation
-
-1. Make sure the backend is running on port 8000
-2. Open the frontend at http://localhost:3000
-3. Check that the status shows "Online" in the header
-4. Type a message in the input box or click an example prompt
-5. Press Enter to send (or Shift+Enter for a new line)
-
-### Features Overview
-
-**Message Input:**
-- Type your message in the text area at the bottom
-- Press `Enter` to send
-- Press `Shift + Enter` to add a new line
-- Character count is displayed below the input
-
-**Chat Features:**
-- Messages are color-coded (purple for user, white for AI)
-- Timestamps show when each message was sent
-- Avatar icons distinguish between user and AI
-- Typing indicator shows when AI is thinking
-- Auto-scroll keeps latest messages visible
-
-**Header Actions:**
-- **Clear button**: Clears the entire conversation (with confirmation)
-- **Status indicator**: Shows connection status to backend
-
-**Example Prompts:**
-- Click any example prompt to quickly start a conversation
-- Examples appear when the chat is empty
-
-### Message Formatting
-
-The chat supports basic markdown-style formatting:
-
-- `**bold text**` → **bold text**
-- `*italic text*` → *italic text*
-- `` `code` `` → `code`
-- Line breaks are preserved
-
-## API Integration
-
-The frontend communicates with the backend through the API service (`src/services/api.js`):
-
-**Available Methods:**
-
-```javascript
-import { bedrockApi } from './services/api'
-
-// Chat completion (used by the interface)
-await bedrockApi.chatCompletion({
-  messages: [
-    { role: 'user', content: 'Hello!' }
-  ],
-  max_tokens: 2048,
-  temperature: 0.7
-})
-
-// Single text generation
-await bedrockApi.generateText({
-  prompt: 'Explain AI',
-  max_tokens: 500
-})
-
-// Health check
-await bedrockApi.healthCheck()
-```
+### AI Chat
+- Context-aware medical responses
+- Conversation history
+- Symptom description support
+- Health information queries
 
 ## Configuration
 
@@ -181,112 +107,71 @@ await bedrockApi.healthCheck()
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITE_API_URL` | `http://localhost:8000` | Backend API URL |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API URL |
 
-### Vite Config
+### API Integration
 
-The `vite.config.js` includes:
-- Vue plugin configuration
-- Development server on port 3000
-- Proxy configuration for API calls
+The frontend communicates with the FastAPI backend for AI responses:
 
-## Customization
+- **Health Check**: `GET /health`
+- **Chat Completion**: `POST /api/v1/bedrock/chat`
+- **Text Generation**: `POST /api/v1/bedrock/generate`
 
-### Changing Colors
+## Browser Compatibility
 
-Edit the gradient colors in `src/App.vue` and `src/components/ChatInterface.vue`:
+- Chrome/Edge 80+
+- Firefox 80+
+- Safari 14+
 
-```css
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+**Note**: Voice features require browsers with Web Speech API support (Chrome, Edge recommended).
+
+## Development
+
+**Lint code:**
+```bash
+npm run lint
 ```
 
-### Modifying Example Prompts
-
-Edit the `examplePrompts` array in `ChatInterface.vue`:
-
-```javascript
-examplePrompts: [
-  'Your custom prompt 1',
-  'Your custom prompt 2',
-  'Your custom prompt 3',
-]
+**Type check:**
+```bash
+npm run type-check
 ```
 
-### Adjusting Max Tokens
+## Deployment
 
-Change the `max_tokens` value in the `sendMessage` method:
-
-```javascript
-const response = await bedrockApi.chatCompletion({
-  messages: apiMessages,
-  max_tokens: 2048,  // Adjust this value
-  temperature: 0.7
-})
+### Vercel (Recommended)
+```bash
+vercel
 ```
+
+### Docker
+```bash
+docker build -t medi-ai-frontend .
+docker run -p 3000:3000 medi-ai-frontend
+```
+
+### Environment Variables for Production
+Set `NEXT_PUBLIC_API_URL` to your production backend URL.
 
 ## Troubleshooting
 
 **Issue: Cannot connect to backend**
 - Ensure backend is running on port 8000
-- Check VITE_API_URL in .env file
-- Verify CORS is enabled on backend
+- Check `NEXT_PUBLIC_API_URL` in environment
+
+**Issue: Voice features not working**
+- Use Chrome or Edge browser
+- Allow microphone permissions
 - Check browser console for errors
 
-**Issue: Messages not sending**
-- Check network tab in browser dev tools
-- Verify backend health endpoint responds
-- Ensure backend AWS credentials are configured
-
-**Issue: Build fails**
-- Clear node_modules and reinstall: `rm -rf node_modules && npm install`
-- Update Node.js to version 16+
-- Check for syntax errors in Vue files
-
-**Issue: Styling looks broken**
-- Hard refresh browser (Ctrl+F5 or Cmd+Shift+R)
-- Clear browser cache
-- Check that style.css is loaded in dev tools
-
-## Browser Support
-
-- Chrome/Edge (latest 2 versions)
-- Firefox (latest 2 versions)
-- Safari (latest 2 versions)
-
-## Performance Tips
-
-- Messages are rendered efficiently with Vue's virtual DOM
-- Auto-scroll only triggers when new messages arrive
-- Large message histories are handled gracefully
-- Consider implementing pagination for very long conversations
-
-## Deployment
-
-### Deploy to Netlify
-
-1. Build the project: `npm run build`
-2. Deploy the `dist/` folder to Netlify
-3. Set environment variable `VITE_API_URL` to your production backend URL
-
-### Deploy to Vercel
-
-1. Install Vercel CLI: `npm i -g vercel`
-2. Run: `vercel`
-3. Set environment variable in Vercel dashboard
-
-### Deploy to GitHub Pages
-
-1. Update `vite.config.js` with base path
-2. Build: `npm run build`
-3. Deploy `dist/` to gh-pages branch
+**Issue: Build errors**
+- Clear `.next` folder: `rm -rf .next`
+- Reinstall dependencies: `npm install`
+- Check Node.js version: `node -v`
 
 ## Contributing
 
-Contributions are welcome! Please ensure:
-- Code follows Vue 3 Composition or Options API conventions
-- Components are properly documented
-- Styles are scoped to components
-- Changes are tested in multiple browsers
+Contributions are welcome! Please follow the existing code style and patterns.
 
 ## License
 
