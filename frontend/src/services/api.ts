@@ -79,4 +79,63 @@ export const bedrockApi = {
       throw error;
     }
   },
+
+  /**
+   * Transcribe audio using OpenAI Whisper
+   */
+  async transcribeAudio(audioBlob: Blob): Promise<{ success: boolean; text?: string; error?: string }> {
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'audio.webm');
+
+      const response = await axios.post(
+        `${API_BASE_URL}/api/v1/transcription/whisper`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error transcribing audio:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Convert text to speech using ElevenLabs
+   */
+  async textToSpeech(text: string, voiceId?: string): Promise<Blob> {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/v1/voice/text-to-speech`,
+        {
+          text,
+          voice_id: voiceId,
+        },
+        {
+          responseType: 'blob',
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error converting text to speech:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get available ElevenLabs voices
+   */
+  async getVoices(): Promise<{ success: boolean; voices: Array<{ voice_id: string; name: string; category?: string }> }> {
+    try {
+      const response = await apiClient.get('/api/v1/voice/voices');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching voices:', error);
+      throw error;
+    }
+  },
 };
