@@ -8,6 +8,8 @@ class OpenAIService:
 
     def __init__(self):
         """Initialize OpenAI client."""
+        if not settings.openai_api_key:
+            raise ValueError("OPENAI_API_KEY is not set in environment variables")
         self.client = AsyncOpenAI(api_key=settings.openai_api_key)
         self.sync_client = OpenAI(api_key=settings.openai_api_key)
 

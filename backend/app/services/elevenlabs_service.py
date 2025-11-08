@@ -9,6 +9,8 @@ class ElevenLabsService:
 
     def __init__(self):
         """Initialize ElevenLabs client."""
+        if not settings.elevenlabs_api_key:
+            raise ValueError("ELEVENLABS_API_KEY is not set in environment variables")
         self.client = ElevenLabs(api_key=settings.elevenlabs_api_key)
 
     async def text_to_speech(
