@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Rachel - default voice
     elevenlabs_model_id: str = "eleven_monolingual_v1"
 
+    # Firecrawl Configuration
+    firecrawl_api_key: Optional[str] = None
+
     # API Configuration
     api_title: str = "Medi-AI FastAPI Backend"
     api_version: str = "1.0.0"
