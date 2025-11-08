@@ -8,7 +8,6 @@ class Settings(BaseSettings):
     # OpenAI Configuration
     openai_api_key: Optional[str] = None
     openai_model: str = "gpt-4o"
-    openai_max_tokens: int = 4096
     openai_temperature: float = 0.7
 
     # ElevenLabs Configuration

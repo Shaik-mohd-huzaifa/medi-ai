@@ -14,7 +14,6 @@ class OpenAIService:
     async def generate_text(
         self,
         prompt: str,
-        max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
         system_prompt: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -23,14 +22,12 @@ class OpenAIService:
 
         Args:
             prompt: The user prompt
-            max_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             system_prompt: Optional system prompt
 
         Returns:
             Dict containing the response and metadata
         """
-        max_tokens = max_tokens or settings.openai_max_tokens
         temperature = temperature or settings.openai_temperature
 
         messages = []
@@ -42,7 +39,6 @@ class OpenAIService:
             response = await self.client.chat.completions.create(
                 model=settings.openai_model,
                 messages=messages,
-                max_tokens=max_tokens,
                 temperature=temperature,
             )
 
@@ -68,7 +64,6 @@ class OpenAIService:
     async def stream_text(
         self,
         prompt: str,
-        max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
         system_prompt: Optional[str] = None,
     ):
@@ -77,14 +72,12 @@ class OpenAIService:
 
         Args:
             prompt: The user prompt
-            max_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             system_prompt: Optional system prompt
 
         Yields:
             Text chunks as they are generated
         """
-        max_tokens = max_tokens or settings.openai_max_tokens
         temperature = temperature or settings.openai_temperature
 
         messages = []
@@ -96,7 +89,6 @@ class OpenAIService:
             stream = await self.client.chat.completions.create(
                 model=settings.openai_model,
                 messages=messages,
-                max_tokens=max_tokens,
                 temperature=temperature,
                 stream=True,
             )
@@ -111,7 +103,6 @@ class OpenAIService:
     async def chat_completion(
         self,
         messages: List[Dict[str, str]],
-        max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
         system_prompt: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -120,14 +111,12 @@ class OpenAIService:
 
         Args:
             messages: List of message dictionaries with 'role' and 'content'
-            max_tokens: Maximum tokens to generate
             temperature: Sampling temperature
             system_prompt: Optional system prompt
 
         Returns:
             Dict containing the response and metadata
         """
-        max_tokens = max_tokens or settings.openai_max_tokens
         temperature = temperature or settings.openai_temperature
 
         # Add system prompt if provided
@@ -140,7 +129,6 @@ class OpenAIService:
             response = await self.client.chat.completions.create(
                 model=settings.openai_model,
                 messages=full_messages,
-                max_tokens=max_tokens,
                 temperature=temperature,
             )
 
