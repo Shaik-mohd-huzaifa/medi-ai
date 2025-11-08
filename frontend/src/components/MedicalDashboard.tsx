@@ -51,14 +51,13 @@ export default function MedicalDashboard() {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful medical AI assistant. Provide supportive and informative responses about health concerns. Always recommend consulting with healthcare professionals for serious symptoms.',
+            content: 'You are AIRA (AI Responsive & Intelligent Assistant), a comprehensive medical AI assistant. You can help with symptom analysis, appointments, medications, health coaching, emergencies, and all healthcare needs. Provide supportive and informative responses about health concerns. Always recommend consulting with healthcare professionals for serious symptoms.',
           },
           {
             role: 'user',
             content: userInput,
           },
         ],
-        max_tokens: 1024,
         temperature: 0.7,
       });
 

@@ -34,7 +34,6 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
             content: transcript,
           },
         ],
-        max_tokens: 1024,
         temperature: 0.7,
       });
 
