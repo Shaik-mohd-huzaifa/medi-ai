@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Sidebar } from '@/components/Sidebar';
 import { VoiceCallModal } from '@/components/VoiceCallModal';
-import { Settings, Share2, MoreVertical, Paperclip, Mic, Send, Mail, Calendar, Phone } from 'lucide-react';
+import { Paperclip, Mic, Send, Mail, Calendar, Phone } from 'lucide-react';
 import { bedrockApi } from '@/services/api';
 
 interface Message {
@@ -46,7 +46,7 @@ export default function MedicalDashboard() {
       });
 
       if (response.success && response.content) {
-        setMessages(prev => [...prev, { role: 'assistant', content: response.content }]);
+        setMessages(prev => [...prev, { role: 'assistant', content: response.content || '' }]);
       } else {
         setMessages(prev => [...prev, { 
           role: 'assistant', 
@@ -98,16 +98,6 @@ export default function MedicalDashboard() {
             >
               <Phone className="h-4 w-4 mr-2" />
               Voice Call
-            </Button>
-            <Button variant="ghost" size="sm" className="text-sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Configuration
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreVertical className="h-4 w-4" />
             </Button>
           </div>
         </div>
