@@ -38,10 +38,10 @@ class ElevenLabsService:
 
         try:
             # Generate audio using ElevenLabs
-            audio_generator = self.client.generate(
+            audio_generator = self.client.text_to_speech.convert(
                 text=text,
-                voice=voice_id,
-                model=model_id,
+                voice_id=voice_id,
+                model_id=model_id,
             )
 
             # Collect audio chunks
@@ -75,12 +75,11 @@ class ElevenLabsService:
         model_id = model_id or settings.elevenlabs_model_id
 
         try:
-            # Generate audio using ElevenLabs
-            audio_generator = self.client.generate(
+            # Generate audio using ElevenLabs with streaming
+            audio_generator = self.client.text_to_speech.convert(
                 text=text,
-                voice=voice_id,
-                model=model_id,
-                stream=True,
+                voice_id=voice_id,
+                model_id=model_id,
             )
 
             # Yield audio chunks
@@ -98,8 +97,8 @@ class ElevenLabsService:
             List of voice objects with id, name, and other metadata
         """
         try:
-            voices = self.client.voices.get_all()
-            return voices.voices
+            response = self.client.voices.get_all()
+            return response.voices if hasattr(response, 'voices') else response
         except Exception as e:
             raise Exception(f"Error fetching voices: {str(e)}")
 
