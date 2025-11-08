@@ -1,168 +1,186 @@
-# Medi-AI: Full-Stack Medical AI Assistant
+# Medi-AI: Full-Stack Medical AI Assistant 🏥
 
-A production-ready full-stack application with a Next.js frontend and FastAPI backend, integrated with AWS Bedrock and Claude 3.5 Sonnet for AI-powered medical assistance.
+A production-ready full-stack medical assistance application with Next.js frontend and FastAPI backend, powered by OpenAI GPT-4o and ElevenLabs voice synthesis.
 
 ## 🌟 Features
 
+### AIRA - AI Responsive & Intelligent Assistant
+Your comprehensive medical AI assistant that can help with:
+- 🩺 Symptom analysis and health guidance
+- 📅 Appointment scheduling support
+- 💊 Medication information
+- 🏃 Health coaching
+- 🚨 Emergency guidance
+- 🗣️ Natural voice conversations
+
 ### Backend (FastAPI)
-- **FastAPI Framework**: Modern, fast, and high-performance web framework
-- **AWS Bedrock Integration**: Seamless integration with Claude 3.5 Sonnet via AWS Bedrock
-- **Multiple Endpoints**: Text generation, streaming, and chat completion
-- **Type Safety**: Full Pydantic model validation
-- **Auto Documentation**: Interactive API docs with Swagger UI and ReDoc
-- **Configuration Management**: Environment-based configuration
-- **CORS Support**: Configurable CORS middleware
+- **OpenAI GPT-4o**: Advanced AI chat completion
+- **OpenAI Whisper**: Speech-to-text transcription
+- **ElevenLabs**: Natural text-to-speech synthesis
+- **FastAPI Framework**: Modern, fast, high-performance
+- **Type Safety**: Full Pydantic validation
+- **Auto Documentation**: Swagger UI and ReDoc
+- **CORS Support**: Configurable middleware
 
 ### Frontend (Next.js + shadcn/ui)
-- **Medical Dashboard**: Professional healthcare dashboard interface
-- **Voice Call Interface**: Speech-to-text and text-to-speech capabilities
-- **Medical Records Management**: View and manage health records
-- **Appointment Scheduling**: Track doctor appointments and consultations
-- **Medical Alerts**: Medication reminders and health notifications
-- **Emergency Contacts**: Quick access to emergency services
-- **AI Chat Integration**: Real-time AI medical assistance
-- **Modern UI**: Built with shadcn/ui components and Tailwind CSS
-- **Fully Responsive**: Works seamlessly on all devices
+- **Modern Medical Dashboard**: Professional healthcare interface
+- **Voice Conversations**: Full speech-to-text and text-to-speech
+- **Medical Records**: Health records management
+- **Appointments**: Doctor appointments tracking
+- **Alerts & Reminders**: Medication and health notifications
+- **Emergency Access**: Quick emergency contacts
+- **Real-time AI Chat**: Instant medical assistance
+- **Responsive Design**: Works on all devices
 
 ## 📁 Project Structure
 
 ```
 medi-ai/
-├── app/                        # Backend (FastAPI)
-│   ├── __init__.py
-│   ├── main.py                 # FastAPI application
-│   ├── config.py               # Configuration settings
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── schemas.py          # Pydantic models
-│   ├── routes/
-│   │   ├── __init__.py
-│   │   └── bedrock.py          # API endpoints
-│   └── services/
-│       ├── __init__.py
-│       └── bedrock_service.py  # AWS Bedrock service
-├── frontend/                   # Frontend (Next.js)
+├── backend/                    # FastAPI Backend
+│   ├── app/
+│   │   ├── main.py            # FastAPI application
+│   │   ├── config.py          # Configuration settings
+│   │   ├── routes/            # API endpoints
+│   │   │   ├── openai.py      # Chat completion
+│   │   │   ├── transcription.py  # Whisper STT
+│   │   │   └── voice.py       # ElevenLabs TTS
+│   │   └── services/          # Business logic
+│   │       ├── openai_service.py
+│   │       └── elevenlabs_service.py
+│   ├── requirements.txt       # Python dependencies
+│   ├── run.py                # Server startup
+│   ├── .env.example          # Environment template
+│   └── README.md             # Backend documentation
+│
+├── frontend/                   # Next.js Frontend
 │   ├── src/
-│   │   ├── app/                # Next.js App Router
-│   │   │   ├── page.tsx        # Main dashboard page
-│   │   │   ├── layout.tsx      # Root layout
-│   │   │   └── globals.css     # Global styles
-│   │   ├── components/         # React components
-│   │   │   ├── ui/             # shadcn/ui components
+│   │   ├── app/               # Next.js App Router
+│   │   │   ├── page.tsx       # Main dashboard
+│   │   │   ├── layout.tsx     # Root layout
+│   │   │   └── globals.css    # Global styles
+│   │   ├── components/        # React components
+│   │   │   ├── ui/            # shadcn/ui components
 │   │   │   ├── MedicalDashboard.tsx
-│   │   │   └── VoiceCallModal.tsx
+│   │   │   ├── VoiceCallModal.tsx
+│   │   │   └── Sidebar.tsx
 │   │   ├── services/
-│   │   │   └── api.ts          # API client
+│   │   │   └── api.ts         # API client
 │   │   ├── types/
-│   │   │   └── speech.d.ts     # TypeScript types
+│   │   │   └── speech.d.ts    # TypeScript types
 │   │   └── lib/
-│   │       └── utils.ts        # Utilities
+│   │       └── utils.ts       # Utilities
 │   ├── next.config.js
 │   └── package.json
-├── .env.example                # Backend environment variables
+│
 ├── .gitignore
-├── requirements.txt            # Python dependencies
-├── run.py                      # Backend runner script
-└── README.md
+└── README.md                   # This file
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.9 or higher
-- Node.js 18+ and npm/yarn
-- AWS Account with Bedrock access
-- AWS credentials with appropriate permissions
+- **Python 3.9+**
+- **Node.js 18+** and npm/yarn
+- **OpenAI API Key** (for GPT-4o and Whisper)
+- **ElevenLabs API Key** (for voice synthesis)
 
 ## Installation
 
-### Backend Setup
+### 1. Clone Repository
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd medi-ai
-   ```
+```bash
+git clone https://github.com/Shaik-mohd-huzaifa/medi-ai.git
+cd medi-ai
+```
 
-2. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+### 2. Backend Setup
 
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+# Navigate to backend
+cd backend
 
-4. **Configure environment variables:**
-   ```bash
-   cp .env.example .env
-   ```
+# Create virtual environment
+python -m venv venv
 
-   Edit `.env` and add your AWS credentials:
-   ```
-   AWS_REGION=us-east-1
-   AWS_ACCESS_KEY_ID=your_access_key
-   AWS_SECRET_ACCESS_KEY=your_secret_key
-   ```
+# Activate virtual environment
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
 
-### Frontend Setup
+# Install dependencies
+pip install -r requirements.txt
 
-1. **Navigate to frontend directory:**
-   ```bash
-   cd frontend
-   ```
+# Configure environment
+cp .env.example .env
+```
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
+Edit `backend/.env` with your API keys:
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o
+OPENAI_TEMPERATURE=0.7
 
-3. **Configure environment (optional):**
-   
-   Create a `.env.local` file with:
-   ```bash
-   NEXT_PUBLIC_API_URL=http://localhost:8000
-   ```
+ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+ELEVENLABS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
+ELEVENLABS_MODEL_ID=eleven_monolingual_v1
+```
+
+### 3. Frontend Setup
+
+```bash
+# Navigate to frontend (from root)
+cd frontend
+
+# Install dependencies
+npm install
+# or
+yarn install
+
+# Configure environment (optional)
+# Create frontend/.env.local:
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
 ## Running the Application
 
 ### Start Backend
 
-**From the root directory:**
+**From the `backend` directory:**
+
 ```bash
-uvicorn app.main:app --reload
-# or
+# Option 1: Using run script
 python run.py
+
+# Option 2: Using uvicorn directly
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The backend will be available at:
+Backend available at:
 - **API**: http://localhost:8000
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
 ### Start Frontend
 
-**From the frontend directory:**
+**From the `frontend` directory:**
+
 ```bash
-cd frontend
 npm run dev
 # or
 yarn dev
 ```
 
-The frontend will be available at:
+Frontend available at:
 - **Application**: http://localhost:3000
 
-### Running Both
+### Running Both (Two Terminals)
 
 **Terminal 1 (Backend):**
 ```bash
-uvicorn app.main:app --reload
+cd backend
+python run.py
 ```
 
 **Terminal 2 (Frontend):**
@@ -171,295 +189,200 @@ cd frontend
 npm run dev
 ```
 
-Then open http://localhost:3000 in your browser to access the medical dashboard!
+Then open http://localhost:3000 in your browser! 🎉
 
-## Using the Medical Dashboard
+## 🎯 Using AIRA Voice Assistant
 
-### Main Features
+### Voice Conversation Flow
 
-1. **Medical Records**: View and access your health records and documents
-2. **Appointments**: Check upcoming doctor appointments and join telehealth sessions
-3. **Medical Alerts**: Receive medication reminders and health notifications
-4. **Emergency Contacts**: Quick access to emergency services (911) and your healthcare providers
+1. **Start Voice Call**: Click the phone icon (📞) in the top right
+2. **Speak**: Click the microphone button and describe your health concern
+3. **AI Processing**: 
+   - Your speech → Whisper API → Text transcription
+   - Text → GPT-4o → AI response
+   - Response → ElevenLabs → Natural voice audio
+4. **Listen**: AIRA responds with natural, professional voice
+5. **Continue**: Click mic again to continue the conversation
+6. **End Call**: Click "End Call" when finished
 
-### AI Medical Assistant
+### Text Chat
 
-**Text Input:**
-- Type your medical question or symptom description in the input bar
-- Press `Enter` to send your query
-- Receive AI-powered medical guidance
+- Type your question in the chat input at the bottom
+- Press `Enter` to send
+- Receive instant AI responses
+- Click microphone icon for quick voice input
 
-**Voice Call Interface:**
-- Click the phone icon (📞) to start a voice call
-- Speak naturally to describe your symptoms
-- Listen to AI responses through text-to-speech
-- Click microphone button to toggle listening
-- End call when finished
+## 🔌 API Endpoints
 
-**Voice Input:**
-- Click the microphone icon (🎤) for quick voice input
-- Speak your question
-- Text will be transcribed and sent automatically
+### Health & Status
+- `GET /` - Welcome message
+- `GET /health` - Health check
 
-**Features:**
-- Real-time speech-to-text conversion
-- Natural language understanding
-- Text-to-speech responses
-- Responsive design for all devices
-- HIPAA-aware conversational guidance
+### Chat & AI
+- `POST /api/v1/bedrock/generate` - Generate text
+- `POST /api/v1/bedrock/generate/stream` - Stream generation
+- `POST /api/v1/bedrock/chat` - Chat completion
 
-## API Endpoints
+### Speech Recognition
+- `POST /api/v1/transcription/whisper` - Transcribe audio to text
 
-### Health Check
+### Voice Synthesis
+- `POST /api/v1/voice/text-to-speech` - Convert text to speech
+- `POST /api/v1/voice/text-to-speech/stream` - Stream TTS
+- `GET /api/v1/voice/voices` - List available voices
+
+Full API documentation: http://localhost:8000/docs
+
+## 🔑 Getting API Keys
+
+### OpenAI
+1. Visit https://platform.openai.com/api-keys
+2. Create an account or sign in
+3. Generate a new API key
+4. Copy to `backend/.env` as `OPENAI_API_KEY`
+
+### ElevenLabs
+1. Visit https://elevenlabs.io/
+2. Create an account or sign in
+3. Navigate to Profile → API Keys
+4. Generate a new API key
+5. Copy to `backend/.env` as `ELEVENLABS_API_KEY`
+
+## 🛠️ Development
+
+### Backend Development
+
 ```bash
-GET /health
-GET /api/v1/bedrock/health
-```
+cd backend
 
-### Text Generation
-**Endpoint:** `POST /api/v1/bedrock/generate`
+# Run with auto-reload
+uvicorn app.main:app --reload
 
-**Request:**
-```json
-{
-  "prompt": "Explain quantum computing in simple terms",
-  "max_tokens": 500,
-  "temperature": 0.7,
-  "system_prompt": "You are a helpful AI assistant"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "content": "Generated text here...",
-  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0",
-  "usage": {
-    "input_tokens": 15,
-    "output_tokens": 120
-  },
-  "stop_reason": "end_turn"
-}
-```
-
-### Streaming Generation
-**Endpoint:** `POST /api/v1/bedrock/generate/stream`
-
-Returns a text stream for real-time response generation.
-
-### Chat Completion
-**Endpoint:** `POST /api/v1/bedrock/chat`
-
-**Request:**
-```json
-{
-  "messages": [
-    {
-      "role": "user",
-      "content": "What is FastAPI?"
-    },
-    {
-      "role": "assistant",
-      "content": "FastAPI is a modern web framework for Python."
-    },
-    {
-      "role": "user",
-      "content": "What are its main features?"
-    }
-  ],
-  "max_tokens": 500,
-  "temperature": 0.7
-}
-```
-
-## Example Usage
-
-### Using cURL
-
-**Text Generation:**
-```bash
-curl -X POST "http://localhost:8000/api/v1/bedrock/generate" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "What is artificial intelligence?",
-    "max_tokens": 200,
-    "temperature": 0.7
-  }'
-```
-
-**Chat Completion:**
-```bash
-curl -X POST "http://localhost:8000/api/v1/bedrock/chat" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "messages": [
-      {"role": "user", "content": "Hello!"}
-    ],
-    "max_tokens": 100
-  }'
-```
-
-### Using Python
-
-```python
-import requests
-
-# Text generation
-response = requests.post(
-    "http://localhost:8000/api/v1/bedrock/generate",
-    json={
-        "prompt": "Explain machine learning",
-        "max_tokens": 300,
-        "temperature": 0.7
-    }
-)
-print(response.json())
-
-# Chat completion
-response = requests.post(
-    "http://localhost:8000/api/v1/bedrock/chat",
-    json={
-        "messages": [
-            {"role": "user", "content": "What is FastAPI?"}
-        ]
-    }
-)
-print(response.json())
-```
-
-## Configuration
-
-### Backend Configuration
-
-Configuration is managed through environment variables and the `app/config.py` file.
-
-**Available settings:**
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `AWS_REGION` | `us-east-1` | AWS region |
-| `AWS_ACCESS_KEY_ID` | `None` | AWS access key |
-| `AWS_SECRET_ACCESS_KEY` | `None` | AWS secret key |
-| `BEDROCK_MODEL_ID` | `anthropic.claude-3-5-sonnet-20241022-v2:0` | Bedrock model ID |
-| `BEDROCK_MAX_TOKENS` | `4096` | Max tokens to generate |
-| `BEDROCK_TEMPERATURE` | `0.7` | Sampling temperature |
-| `API_TITLE` | `Medi-AI FastAPI Backend` | API title |
-| `API_VERSION` | `1.0.0` | API version |
-
-### Frontend Configuration
-
-Frontend environment variables (optional):
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `VITE_API_URL` | `http://localhost:8000` | Backend API URL |
-
-## AWS Bedrock Setup
-
-1. **Enable Bedrock access** in your AWS account
-2. **Request model access** for Claude 3.5 Sonnet in the AWS Bedrock console
-3. **Create IAM credentials** with the following permissions:
-   - `bedrock:InvokeModel`
-   - `bedrock:InvokeModelWithResponseStream`
-
-## Development
-
-**Run with auto-reload:**
-```bash
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-**Format code:**
-```bash
+# Format code
 pip install black
 black app/
-```
 
-**Type checking:**
-```bash
+# Type checking
 pip install mypy
 mypy app/
 ```
 
-## Production Deployment
+### Frontend Development
 
-### Backend Deployment
-
-**Using Uvicorn:**
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+cd frontend
+
+# Development server with hot reload
+npm run dev
+
+# Build for production
+npm run build
+
+# Lint code
+npm run lint
 ```
 
-**Using Gunicorn with Uvicorn workers:**
+## 📦 Production Deployment
+
+### Backend
+
+**Using Docker:**
+```bash
+cd backend
+docker build -t medi-ai-backend .
+docker run -p 8000:8000 --env-file .env medi-ai-backend
+```
+
+**Using Gunicorn:**
 ```bash
 pip install gunicorn
 gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
 ```
 
-### Frontend Deployment
+### Frontend
 
-**Build for production:**
+**Build:**
 ```bash
 cd frontend
 npm run build
 ```
 
-**Deploy options:**
-- **Netlify**: Deploy the `frontend/dist/` folder
-- **Vercel**: Run `vercel` in the frontend directory
-- **AWS S3 + CloudFront**: Upload dist folder to S3 bucket
-- **Nginx**: Serve the dist folder as static files
+**Deploy to:**
+- **Vercel**: `vercel deploy`
+- **Netlify**: Deploy `.next` folder
+- **AWS S3 + CloudFront**: Upload build output
 
-**Important**: Update `VITE_API_URL` to point to your production backend URL before building.
+**⚠️ Important**: Update `NEXT_PUBLIC_API_URL` to your production backend URL before building.
 
-## Security Considerations
+## 🔒 Security
 
-- Never commit `.env` file with real credentials
-- Use IAM roles instead of access keys when deployed on AWS
-- Configure CORS `allow_origins` for production
-- Implement rate limiting for production use
-- Use HTTPS in production
-- Consider implementing API key authentication
+- ✅ Never commit `.env` files
+- ✅ Use environment variables for secrets
+- ✅ Configure CORS properly for production
+- ✅ Implement rate limiting
+- ✅ Use HTTPS in production
+- ✅ Rotate API keys regularly
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Backend Issues
 
-**Issue: AWS credentials not found**
-- Ensure `.env` file exists in root directory and contains valid credentials
-- Verify AWS credentials have Bedrock permissions
+**Cannot start server:**
+```bash
+# Activate virtual environment
+cd backend
+source venv/bin/activate  # or venv\Scripts\activate on Windows
 
-**Issue: Model access denied**
-- Request access to Claude models in AWS Bedrock console
-- Wait for access approval (can take a few minutes)
+# Reinstall dependencies
+pip install -r requirements.txt
+```
 
-**Issue: Import errors**
-- Verify virtual environment is activated
-- Reinstall dependencies: `pip install -r requirements.txt`
+**API Key errors:**
+- Verify API keys in `backend/.env`
+- Check keys are valid and not expired
+- Ensure no extra spaces in `.env` file
 
 ### Frontend Issues
 
-**Issue: Cannot connect to backend**
-- Ensure backend is running on port 8000
-- Check VITE_API_URL in frontend/.env
-- Verify CORS is enabled on backend
-- Check browser console for errors
+**Cannot connect to backend:**
+- Verify backend is running on port 8000
+- Check `NEXT_PUBLIC_API_URL` in `frontend/.env.local`
+- Open http://localhost:8000/health to test backend
 
-**Issue: Frontend won't start**
-- Delete node_modules and reinstall: `cd frontend && rm -rf node_modules && npm install`
-- Clear npm cache: `npm cache clean --force`
-- Update Node.js to version 16+
+**Build errors:**
+```bash
+cd frontend
+rm -rf node_modules .next
+npm install
+npm run dev
+```
 
-**Issue: Messages not sending**
-- Check network tab in browser dev tools
-- Verify backend /health endpoint responds
-- Ensure AWS credentials are configured in backend
+## 🤝 Contributing
 
-## License
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-MIT License
+## 📄 License
 
-## Contributing
+MIT License - see LICENSE file for details
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## 🙏 Acknowledgments
+
+- **OpenAI** for GPT-4o and Whisper
+- **ElevenLabs** for natural voice synthesis
+- **FastAPI** for the excellent framework
+- **Next.js** and **shadcn/ui** for frontend tools
+
+## 📞 Support
+
+For issues or questions:
+- Open an issue on GitHub
+- Check the documentation in `/backend/README.md`
+- Review API docs at http://localhost:8000/docs
+
+---
+
+**Made with ❤️ for better healthcare accessibility**

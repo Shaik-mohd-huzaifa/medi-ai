@@ -8,8 +8,15 @@ class Settings(BaseSettings):
     # OpenAI Configuration
     openai_api_key: Optional[str] = None
     openai_model: str = "gpt-4o"
-    openai_max_tokens: int = 4096
     openai_temperature: float = 0.7
+
+    # ElevenLabs Configuration
+    elevenlabs_api_key: Optional[str] = None
+    elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"  # Rachel - default voice
+    elevenlabs_model_id: str = "eleven_monolingual_v1"
+
+    # Firecrawl Configuration
+    firecrawl_api_key: Optional[str] = None
 
     # API Configuration
     api_title: str = "Medi-AI FastAPI Backend"
