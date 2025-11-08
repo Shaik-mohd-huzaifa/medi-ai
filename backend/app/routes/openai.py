@@ -38,7 +38,6 @@ async def generate_text(request: GenerateRequest):
     try:
         result = await openai_service.generate_text(
             prompt=request.prompt,
-            max_tokens=request.max_tokens,
             temperature=request.temperature,
             system_prompt=request.system_prompt,
         )
@@ -81,7 +80,6 @@ async def generate_text_stream(request: GenerateRequest):
         async def generate():
             async for chunk in openai_service.stream_text(
                 prompt=request.prompt,
-                max_tokens=request.max_tokens,
                 temperature=request.temperature,
                 system_prompt=request.system_prompt,
             ):
@@ -121,7 +119,6 @@ async def chat_completion(request: ChatRequest):
 
         result = await openai_service.chat_completion(
             messages=messages,
-            max_tokens=request.max_tokens,
             temperature=request.temperature,
             system_prompt=request.system_prompt,
         )
