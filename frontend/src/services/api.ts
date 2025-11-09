@@ -59,10 +59,18 @@ export const bedrockApi = {
    */
   async chatCompletion(payload: ChatRequest): Promise<ApiResponse> {
     try {
+      console.log('🔄 API: Sending POST to /api/v1/bedrock/chat');
+      console.log('🔄 API: Base URL:', API_BASE_URL);
+      console.log('🔄 API: Payload:', payload);
+      
       const response = await apiClient.post('/api/v1/bedrock/chat', payload);
+      
+      console.log('✅ API: Response received:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Error in chat completion:', error);
+    } catch (error: any) {
+      console.error('❌ API: Error in chat completion:', error);
+      console.error('❌ API: Error response:', error.response?.data);
+      console.error('❌ API: Error status:', error.response?.status);
       throw error;
     }
   },

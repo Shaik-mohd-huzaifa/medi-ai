@@ -29,8 +29,10 @@ export default function MedicalDashboard() {
     setUserInput('');
     setIsLoading(true);
 
+    console.log('💬 Sending message to backend...');
+
     try {
-      const response = await bedrockApi.chatCompletion({
+      const payload = {
         messages: [
           {
             role: 'system',
@@ -43,21 +45,34 @@ export default function MedicalDashboard() {
           },
         ],
         temperature: 0.7,
-      });
+      };
+
+      console.log('📤 Request payload:', payload);
+      
+      const response = await bedrockApi.chatCompletion(payload);
+      
+      console.log('📥 Response received:', response);
 
       if (response.success && response.content) {
         setMessages(prev => [...prev, { role: 'assistant', content: response.content || '' }]);
       } else {
+        console.error('❌ Response not successful:', response);
         setMessages(prev => [...prev, { 
           role: 'assistant', 
           content: "Sorry, I'm having trouble connecting right now. Please try again." 
         }]);
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
+    } catch (error: any) {
+      console.error('❌ Error sending message:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'There was an error processing your request. Please try again.' 
+        content: `Error: ${error.response?.data?.detail || error.message || 'Unable to connect to server'}` 
       }]);
     } finally {
       setIsLoading(false);
