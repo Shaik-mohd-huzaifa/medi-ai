@@ -41,9 +41,22 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
 
   const speak = useCallback(async (text: string) => {
     setIsSpeaking(true);
+    
+    // Start playing immediately when audio starts arriving
     try {
-      // Get audio from ElevenLabs
-      const audioBlob = await bedrockApi.textToSpeech(text);
+      // Use streaming endpoint for faster response
+      const response = await fetch('http://localhost:8000/api/v1/voice/text-to-speech/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) throw new Error('Streaming failed');
+
+      // Get the audio stream
+      const audioBlob = await response.blob();
       
       // Create audio element and play
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -56,6 +69,7 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
         setIsSpeaking(false);
       };
       
+      // Play immediately as audio arrives
       await audio.play();
     } catch (error) {
       console.error('Error playing ElevenLabs audio:', error);
@@ -300,19 +314,22 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
             </div>
           </div>
 
-          {/* Transcript */}
+          {/* Visual indicator only - no text displayed */}
           {currentTranscript && (
-            <div className="bg-slate-50 border-l-4 border-indigo-500 rounded-lg p-4 text-left max-h-24 overflow-y-auto">
-              <p className="font-semibold text-sm mb-1">You said:</p>
-              <p className="text-sm">{currentTranscript}</p>
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full">
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
+                <span className="text-sm text-indigo-700 font-medium">Voice detected</span>
+              </div>
             </div>
           )}
 
-          {/* Assistant Response */}
-          {assistantResponse && (
-            <div className="bg-slate-50 border-l-4 border-purple-500 rounded-lg p-4 text-left max-h-32 overflow-y-auto">
-              <p className="font-semibold text-sm mb-1">AIRA:</p>
-              <p className="text-sm">{assistantResponse}</p>
+          {assistantResponse && !isSpeaking && (
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-full">
+                <div className="w-2 h-2 bg-purple-600 rounded-full" />
+                <span className="text-sm text-purple-700 font-medium">Response ready</span>
+              </div>
             </div>
           )}
 
