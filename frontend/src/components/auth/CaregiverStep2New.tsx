@@ -32,7 +32,7 @@ export function CaregiverStep2({ onComplete, onBack }: CaregiverStep2Props) {
         address_line2: addressLine2,
         city,
         state,
-        country: 'United States',
+        country: 'India',
         zipcode,
       });
 
@@ -71,7 +71,7 @@ export function CaregiverStep2({ onComplete, onBack }: CaregiverStep2Props) {
           <Label htmlFor="country">Country</Label>
           <Input
             id="country"
-            value="United States"
+            value="India"
             disabled
             className="bg-gray-50"
           />
