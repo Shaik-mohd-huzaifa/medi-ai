@@ -22,6 +22,28 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
   const audioChunksRef = useRef<Blob[]>([]);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Play audio from blob
+  const playAudioBlob = useCallback(async (audioBlob: Blob) => {
+    setIsSpeaking(true);
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    currentAudioRef.current = audio;
+    
+    audio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      currentAudioRef.current = null;
+      setIsSpeaking(false);
+    };
+    
+    try {
+      await audio.play();
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      setIsSpeaking(false);
+      URL.revokeObjectURL(audioUrl);
+    }
+  }, []);
+
   // Initialize WebSocket connection
   const connectWebSocket = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
@@ -36,10 +58,8 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
         console.log('✅ WebSocket connected successfully!');
         setConnectionStatus('connected');
         
-        // Send initial greeting request
-        const greeting = "Hello! I'm AIRA, your comprehensive AI medical assistant. How can I help you today?";
-        setAssistantResponse(greeting);
-        playAudio(greeting);
+        // Just show ready status - no auto greeting
+        console.log('Ready for voice input!');
       };
     
     ws.onmessage = async (event) => {
@@ -103,43 +123,8 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
       setConnectionStatus('disconnected');
       alert('Failed to connect to voice server. Error: ' + error);
     }
-  }, [onClose]);
+  }, [onClose, playAudioBlob]);
 
-  // Play audio from blob
-  const playAudioBlob = async (audioBlob: Blob) => {
-    setIsSpeaking(true);
-    const audioUrl = URL.createObjectURL(audioBlob);
-    const audio = new Audio(audioUrl);
-    currentAudioRef.current = audio;
-    
-    audio.onended = () => {
-      URL.revokeObjectURL(audioUrl);
-      currentAudioRef.current = null;
-      setIsSpeaking(false);
-    };
-    
-    try {
-      await audio.play();
-    } catch (error) {
-      console.error('Error playing audio:', error);
-      setIsSpeaking(false);
-      URL.revokeObjectURL(audioUrl);
-    }
-  };
-
-  // Fallback text-to-speech for greeting
-  const playAudio = (text: string) => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.volume = 0.8;
-      utterance.onend = () => setIsSpeaking(false);
-      setIsSpeaking(true);
-      window.speechSynthesis.speak(utterance);
-    }
-  };
 
   // Send audio to server via WebSocket
   const sendAudio = useCallback(async (audioBlob: Blob) => {
@@ -226,9 +211,15 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
   // Connect WebSocket when modal opens
   useEffect(() => {
     if (isOpen) {
-      connectWebSocket();
+      // Reset all states
       setCurrentTranscript('');
       setAssistantResponse('');
+      setIsProcessing(false);
+      setIsSpeaking(false);
+      setIsListening(false);
+      
+      // Connect to WebSocket
+      connectWebSocket();
     }
     
     return () => {
@@ -274,10 +265,15 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
       wsRef.current.close();
       wsRef.current = null;
     }
+    
+    // Reset all states
     setIsListening(false);
+    setIsProcessing(false);
+    setIsSpeaking(false);
     setCurrentTranscript('');
     setAssistantResponse('');
     setConnectionStatus('disconnected');
+    
     onClose();
   };
 
