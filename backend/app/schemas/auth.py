@@ -46,49 +46,25 @@ class PatientSignup(BaseModel):
 class CaregiverSignupStep1(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=8)
-    full_name: str
+    full_name: str  # User name or Clinic/Hospital name based on type
     phone_number: Optional[str] = None
     caregiver_type: CaregiverType
 
 
-# Caregiver Business Overview (Step 2)
-class CaregiverBusinessOverview(BaseModel):
-    business_name: str
-    business_description: Optional[str] = None
-    company_type: Optional[CompanyType] = None
-    employee_count: Optional[EmployeeCount] = None
-    business_address_line1: Optional[str] = None
-    business_address_line2: Optional[str] = None
-    business_city: Optional[str] = None
-    business_state: Optional[str] = None
-    business_zipcode: Optional[str] = None
-    billing_same_as_business: bool = True
-    billing_address_line1: Optional[str] = None
-    billing_address_line2: Optional[str] = None
-    billing_city: Optional[str] = None
-    billing_state: Optional[str] = None
-    billing_zipcode: Optional[str] = None
+# Caregiver Location (Step 2)
+class CaregiverLocation(BaseModel):
+    address_line1: str
+    address_line2: Optional[str] = None
+    city: str
+    state: str
+    country: str = "United States"
+    zipcode: Optional[str] = None
 
 
-# Caregiver Profile (Step 3)
-class CaregiverProfileBuild(BaseModel):
-    license_number: Optional[str] = None
-    specialization: Optional[str] = None
-    years_of_experience: Optional[int] = None
-
-
-# Caregiver Banking (Step 4)
-class CaregiverBanking(BaseModel):
-    bank_name: Optional[str] = None
-    account_holder_name: Optional[str] = None
-    account_number: Optional[str] = None
-    routing_number: Optional[str] = None
-
-
-# Caregiver Tax Information (Step 5)
-class CaregiverTax(BaseModel):
-    tax_id: Optional[str] = None
-    tax_classification: Optional[str] = None
+# Caregiver Services (Step 3)
+class CaregiverServices(BaseModel):
+    specializations: list[str]  # e.g., ["General", "Cardiology", "Pediatrics"]
+    consultation_modes: list[str]  # e.g., ["In-person", "Telemedicine", "Home visits"]
 
 
 # Token Schemas

@@ -4,8 +4,7 @@ from app.database import get_db
 from app.models.user import User, PatientProfile, CaregiverProfile, UserRole
 from app.schemas.auth import (
     UserLogin, Token, PatientSignup, CaregiverSignupStep1,
-    CaregiverBusinessOverview, CaregiverProfileBuild, CaregiverBanking,
-    CaregiverTax, UserResponse
+    CaregiverLocation, CaregiverServices, UserResponse
 )
 from app.utils.auth import (
     verify_password, get_password_hash, create_access_token,
@@ -91,7 +90,7 @@ async def caregiver_signup_step1(
     caregiver_profile = CaregiverProfile(
         user_id=new_user.id,
         caregiver_type=user_data.caregiver_type,
-        business_name="",  # Will be filled in step 2
+        business_name=user_data.full_name,  # Clinic/Hospital name or doctor name
         onboarding_step=1
     )
     
@@ -109,12 +108,12 @@ async def caregiver_signup_step1(
 
 
 @router.put("/caregiver/onboarding/step2")
-async def caregiver_step2_business_overview(
-    data: CaregiverBusinessOverview,
+async def caregiver_step2_location(
+    data: CaregiverLocation,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Update caregiver profile - Step 2: Business Overview"""
+    """Update caregiver profile - Step 2: Location"""
     if current_user.role != UserRole.CAREGIVER:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -131,39 +130,26 @@ async def caregiver_step2_business_overview(
             detail="Caregiver profile not found"
         )
     
-    # Update business information
-    profile.business_name = data.business_name
-    profile.business_description = data.business_description
-    profile.company_type = data.company_type
-    profile.employee_count = data.employee_count
-    profile.business_address_line1 = data.business_address_line1
-    profile.business_address_line2 = data.business_address_line2
-    profile.business_city = data.business_city
-    profile.business_state = data.business_state
-    profile.business_zipcode = data.business_zipcode
-    profile.billing_same_as_business = data.billing_same_as_business
-    
-    if not data.billing_same_as_business:
-        profile.billing_address_line1 = data.billing_address_line1
-        profile.billing_address_line2 = data.billing_address_line2
-        profile.billing_city = data.billing_city
-        profile.billing_state = data.billing_state
-        profile.billing_zipcode = data.billing_zipcode
-    
+    # Update location information
+    profile.business_address_line1 = data.address_line1
+    profile.business_address_line2 = data.address_line2
+    profile.business_city = data.city
+    profile.business_state = data.state
+    profile.business_zipcode = data.zipcode
     profile.onboarding_step = 2
     
     db.commit()
     
-    return {"message": "Business overview updated successfully", "next_step": 3}
+    return {"message": "Location updated successfully", "next_step": 3}
 
 
 @router.put("/caregiver/onboarding/step3")
-async def caregiver_step3_build_profile(
-    data: CaregiverProfileBuild,
+async def caregiver_step3_services(
+    data: CaregiverServices,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Update caregiver profile - Step 3: Build Profile"""
+    """Update caregiver profile - Step 3: Services Offered"""
     if current_user.role != UserRole.CAREGIVER:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -180,114 +166,14 @@ async def caregiver_step3_build_profile(
             detail="Caregiver profile not found"
         )
     
-    # Update profile information
-    profile.license_number = data.license_number
-    profile.specialization = data.specialization
-    profile.years_of_experience = data.years_of_experience
+    # Update services information
+    profile.specialization = ", ".join(data.specializations)
     profile.onboarding_step = 3
+    profile.onboarding_completed = True
     
     db.commit()
     
-    return {"message": "Profile updated successfully", "next_step": 4}
-
-
-@router.put("/caregiver/onboarding/step4")
-async def caregiver_step4_banking(
-    data: CaregiverBanking,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Update caregiver profile - Step 4: Banking Information"""
-    if current_user.role != UserRole.CAREGIVER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only caregivers can access this endpoint"
-        )
-    
-    profile = db.query(CaregiverProfile).filter(
-        CaregiverProfile.user_id == current_user.id
-    ).first()
-    
-    if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Caregiver profile not found"
-        )
-    
-    # Update banking information
-    profile.bank_name = data.bank_name
-    profile.account_holder_name = data.account_holder_name
-    profile.account_number = data.account_number
-    profile.routing_number = data.routing_number
-    profile.onboarding_step = 4
-    
-    db.commit()
-    
-    return {"message": "Banking information updated successfully", "next_step": 5}
-
-
-@router.put("/caregiver/onboarding/step5")
-async def caregiver_step5_tax(
-    data: CaregiverTax,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Update caregiver profile - Step 5: Tax Information"""
-    if current_user.role != UserRole.CAREGIVER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only caregivers can access this endpoint"
-        )
-    
-    profile = db.query(CaregiverProfile).filter(
-        CaregiverProfile.user_id == current_user.id
-    ).first()
-    
-    if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Caregiver profile not found"
-        )
-    
-    # Update tax information
-    profile.tax_id = data.tax_id
-    profile.tax_classification = data.tax_classification
-    profile.onboarding_step = 5
-    
-    db.commit()
-    
-    return {"message": "Tax information updated successfully", "next_step": 6}
-
-
-@router.put("/caregiver/onboarding/complete")
-async def caregiver_complete_onboarding(
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Complete caregiver onboarding"""
-    if current_user.role != UserRole.CAREGIVER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only caregivers can access this endpoint"
-        )
-    
-    profile = db.query(CaregiverProfile).filter(
-        CaregiverProfile.user_id == current_user.id
-    ).first()
-    
-    if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Caregiver profile not found"
-        )
-    
-    # Mark onboarding as complete
-    profile.profile_completed = True
-    profile.onboarding_step = 7
-    
-    db.commit()
-    
-    return {"message": "Onboarding completed successfully!"}
+    return {"message": "Services updated successfully. Onboarding complete!"}
 
 
 @router.post("/login", response_model=Token)

@@ -89,11 +89,22 @@ export function CaregiverStep1({ onComplete }: CaregiverStep1Props) {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name *</Label>
+            <Label htmlFor="fullName">
+              {caregiverType === CaregiverType.INDIVIDUAL_DOCTOR 
+                ? 'Full Name *' 
+                : caregiverType === CaregiverType.CLINIC
+                  ? 'Clinic Name *'
+                  : 'Hospital Name *'}
+            </Label>
             <Input
               id="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              placeholder={caregiverType === CaregiverType.INDIVIDUAL_DOCTOR 
+                ? 'Dr. John Smith' 
+                : caregiverType === CaregiverType.CLINIC
+                  ? 'City Medical Clinic'
+                  : 'General Hospital'}
               required
             />
           </div>

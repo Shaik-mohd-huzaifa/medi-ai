@@ -79,44 +79,20 @@ export interface CaregiverSignupStep1Data {
   caregiver_type: CaregiverType;
 }
 
-// Caregiver Step 2 - Business Overview
-export interface CaregiverBusinessOverviewData {
-  business_name: string;
-  business_description?: string;
-  company_type?: CompanyType;
-  employee_count?: EmployeeCount;
-  business_address_line1?: string;
-  business_address_line2?: string;
-  business_city?: string;
-  business_state?: string;
-  business_zipcode?: string;
-  billing_same_as_business?: boolean;
-  billing_address_line1?: string;
-  billing_address_line2?: string;
-  billing_city?: string;
-  billing_state?: string;
-  billing_zipcode?: string;
+// Caregiver Step 2 - Location
+export interface CaregiverLocationData {
+  address_line1: string;
+  address_line2?: string;
+  city: string;
+  state: string;
+  country?: string;
+  zipcode?: string;
 }
 
-// Caregiver Step 3 - Build Profile
-export interface CaregiverProfileBuildData {
-  license_number?: string;
-  specialization?: string;
-  years_of_experience?: number;
-}
-
-// Caregiver Step 4 - Banking
-export interface CaregiverBankingData {
-  bank_name?: string;
-  account_holder_name?: string;
-  account_number?: string;
-  routing_number?: string;
-}
-
-// Caregiver Step 5 - Tax
-export interface CaregiverTaxData {
-  tax_id?: string;
-  tax_classification?: string;
+// Caregiver Step 3 - Services
+export interface CaregiverServicesData {
+  specializations: string[];  // e.g., ["General", "Cardiology"]
+  consultation_modes: string[];  // e.g., ["In-person", "Telemedicine"]
 }
 
 export const authApi = {
@@ -138,33 +114,15 @@ export const authApi = {
     return response.data;
   },
 
-  // Caregiver Onboarding - Step 2
-  async caregiverOnboardingStep2(data: CaregiverBusinessOverviewData): Promise<{ message: string; next_step: number }> {
+  // Caregiver Onboarding - Step 2: Location
+  async caregiverOnboardingStep2(data: CaregiverLocationData): Promise<{ message: string; next_step: number }> {
     const response = await authClient.put('/api/v1/auth/caregiver/onboarding/step2', data);
     return response.data;
   },
 
-  // Caregiver Onboarding - Step 3
-  async caregiverOnboardingStep3(data: CaregiverProfileBuildData): Promise<{ message: string; next_step: number }> {
+  // Caregiver Onboarding - Step 3: Services
+  async caregiverOnboardingStep3(data: CaregiverServicesData): Promise<{ message: string }> {
     const response = await authClient.put('/api/v1/auth/caregiver/onboarding/step3', data);
-    return response.data;
-  },
-
-  // Caregiver Onboarding - Step 4
-  async caregiverOnboardingStep4(data: CaregiverBankingData): Promise<{ message: string; next_step: number }> {
-    const response = await authClient.put('/api/v1/auth/caregiver/onboarding/step4', data);
-    return response.data;
-  },
-
-  // Caregiver Onboarding - Step 5
-  async caregiverOnboardingStep5(data: CaregiverTaxData): Promise<{ message: string; next_step: number }> {
-    const response = await authClient.put('/api/v1/auth/caregiver/onboarding/step5', data);
-    return response.data;
-  },
-
-  // Complete Onboarding
-  async caregiverCompleteOnboarding(): Promise<{ message: string }> {
-    const response = await authClient.put('/api/v1/auth/caregiver/onboarding/complete');
     return response.data;
   },
 

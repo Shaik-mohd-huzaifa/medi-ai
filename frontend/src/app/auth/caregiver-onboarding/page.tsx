@@ -3,17 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CaregiverStep1 } from '@/components/auth/CaregiverStep1';
-import { CaregiverStep2 } from '@/components/auth/CaregiverStep2';
-import { CaregiverStep3 } from '@/components/auth/CaregiverStep3';
-import { CaregiverStep4 } from '@/components/auth/CaregiverStep4';
-import { CaregiverStep5 } from '@/components/auth/CaregiverStep5';
-import { CaregiverStep6 } from '@/components/auth/CaregiverStep6';
-import { CaregiverStep7 } from '@/components/auth/CaregiverStep7';
+import { CaregiverStep2 } from '@/components/auth/CaregiverStep2New';
+import { CaregiverStep3 } from '@/components/auth/CaregiverStep3New';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
-type OnboardingStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type OnboardingStep = 1 | 2 | 3;
 
 export default function CaregiverOnboarding() {
   const router = useRouter();
@@ -23,12 +19,8 @@ export default function CaregiverOnboarding() {
 
   const steps = [
     { number: 1, label: 'Create account', completed: currentStep > 1 },
-    { number: 2, label: 'Business overview', completed: currentStep > 2 },
-    { number: 3, label: 'Build profile', completed: currentStep > 3 },
-    { number: 4, label: 'Bank details', completed: currentStep > 4 },
-    { number: 5, label: 'Tax information', completed: currentStep > 5 },
-    { number: 6, label: 'Two-factor authentication', completed: currentStep > 6 },
-    { number: 7, label: 'Confirm details', completed: false },
+    { number: 2, label: 'Location', completed: currentStep > 2 },
+    { number: 3, label: 'Services', completed: false },
   ];
 
   return (
@@ -93,42 +85,8 @@ export default function CaregiverOnboarding() {
                 )}
                 {currentStep === 3 && (
                   <CaregiverStep3
-                    onComplete={(data) => {
-                      setFormData({ ...formData, ...data });
-                      setCurrentStep(4);
-                    }}
-                    onBack={() => setCurrentStep(2)}
-                  />
-                )}
-                {currentStep === 4 && (
-                  <CaregiverStep4
-                    onComplete={(data) => {
-                      setFormData({ ...formData, ...data });
-                      setCurrentStep(5);
-                    }}
-                    onBack={() => setCurrentStep(3)}
-                  />
-                )}
-                {currentStep === 5 && (
-                  <CaregiverStep5
-                    onComplete={(data) => {
-                      setFormData({ ...formData, ...data });
-                      setCurrentStep(6);
-                    }}
-                    onBack={() => setCurrentStep(4)}
-                  />
-                )}
-                {currentStep === 6 && (
-                  <CaregiverStep6
-                    onComplete={() => setCurrentStep(7)}
-                    onBack={() => setCurrentStep(5)}
-                  />
-                )}
-                {currentStep === 7 && (
-                  <CaregiverStep7
-                    formData={formData}
                     onComplete={() => router.push('/dashboard')}
-                    onBack={() => setCurrentStep(6)}
+                    onBack={() => setCurrentStep(2)}
                   />
                 )}
               </div>
