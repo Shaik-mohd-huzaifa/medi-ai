@@ -3,16 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { bedrockApi } from '@/services/api';
 
 interface VoiceCallModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
 }
 
 export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
@@ -20,142 +14,147 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
   const [currentTranscript, setCurrentTranscript] = useState('');
   const [assistantResponse, setAssistantResponse] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [conversationHistory, setConversationHistory] = useState<Message[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
   
+  const wsRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const autoListenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if user wants to end conversation
-  const checkForGoodbye = (text: string): boolean => {
-    const goodbyePhrases = [
-      'goodbye', 'bye', 'end call', 'hang up', 'stop', 
-      'quit', 'exit', 'thank you goodbye', 'that\'s all',
-      'end conversation', 'disconnect'
-    ];
-    const lowerText = text.toLowerCase();
-    return goodbyePhrases.some(phrase => lowerText.includes(phrase));
-  };
+  // Initialize WebSocket connection
+  const connectWebSocket = useCallback(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-  const speak = useCallback(async (text: string) => {
-    setIsSpeaking(true);
+    setConnectionStatus('connecting');
+    const ws = new WebSocket('ws://localhost:8000/ws/voice');
     
-    // Start playing immediately when audio starts arriving
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      setConnectionStatus('connected');
+      
+      // Send initial greeting request
+      const greeting = "Hello! I'm AIRA, your comprehensive AI medical assistant. How can I help you today?";
+      setAssistantResponse(greeting);
+      playAudio(greeting);
+    };
+    
+    ws.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
+      
+      switch (data.type) {
+        case 'transcript':
+          console.log('Transcript received:', data.text);
+          setCurrentTranscript(data.text);
+          break;
+          
+        case 'response':
+          console.log('Response received:', data.text);
+          setAssistantResponse(data.text);
+          setIsProcessing(false);
+          break;
+          
+        case 'audio':
+          console.log('Audio received');
+          // Decode base64 audio and play
+          const audioData = atob(data.data);
+          const audioArray = new Uint8Array(audioData.length);
+          for (let i = 0; i < audioData.length; i++) {
+            audioArray[i] = audioData.charCodeAt(i);
+          }
+          const audioBlob = new Blob([audioArray], { type: 'audio/mpeg' });
+          await playAudioBlob(audioBlob);
+          break;
+          
+        case 'error':
+          console.error('WebSocket error:', data.message);
+          setIsProcessing(false);
+          setIsSpeaking(false);
+          alert('Error: ' + data.message);
+          break;
+          
+        case 'end':
+          console.log('Conversation ended');
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+          break;
+      }
+    };
+    
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setConnectionStatus('disconnected');
+    };
+    
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      setConnectionStatus('disconnected');
+    };
+    
+    wsRef.current = ws;
+  }, [onClose]);
+
+  // Play audio from blob
+  const playAudioBlob = async (audioBlob: Blob) => {
+    setIsSpeaking(true);
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    currentAudioRef.current = audio;
+    
+    audio.onended = () => {
+      URL.revokeObjectURL(audioUrl);
+      currentAudioRef.current = null;
+      setIsSpeaking(false);
+    };
+    
     try {
-      // Use streaming endpoint for faster response
-      const response = await fetch('http://localhost:8000/api/v1/voice/text-to-speech/stream', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!response.ok) throw new Error('Streaming failed');
-
-      // Get the audio stream
-      const audioBlob = await response.blob();
-      
-      // Create audio element and play
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      currentAudioRef.current = audio;
-      
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        currentAudioRef.current = null;
-        setIsSpeaking(false);
-      };
-      
-      // Play immediately as audio arrives
       await audio.play();
     } catch (error) {
-      console.error('Error playing ElevenLabs audio:', error);
+      console.error('Error playing audio:', error);
       setIsSpeaking(false);
-      
-      // Fallback to browser speech synthesis
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.volume = 0.8;
-        
-        utterance.onend = () => {
-          setIsSpeaking(false);
-        };
-        
-        window.speechSynthesis.speak(utterance);
-      }
+      URL.revokeObjectURL(audioUrl);
     }
-  }, []);
+  };
 
-  const processVoiceInput = useCallback(async (transcript: string) => {
-    if (isProcessing) return;
+  // Fallback text-to-speech for greeting
+  const playAudio = (text: string) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 0.8;
+      utterance.onend = () => setIsSpeaking(false);
+      setIsSpeaking(true);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
-    // Check if user wants to end the call
-    if (checkForGoodbye(transcript)) {
-      const goodbyeMsg = "Thank you for using AIRA. Take care of your health. Goodbye!";
-      setAssistantResponse(goodbyeMsg);
-      await speak(goodbyeMsg);
-      
-      // Close after goodbye message
-      setTimeout(() => {
-        onClose();
-      }, 3000);
+  // Send audio to server via WebSocket
+  const sendAudio = useCallback(async (audioBlob: Blob) => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.error('WebSocket not connected');
       return;
     }
 
     setIsProcessing(true);
-    try {
-      // Build conversation context
-      const messages: Message[] = [
-        {
-          role: 'system',
-          content: 'You are AIRA (AI Responsive & Intelligent Assistant), a comprehensive medical AI assistant. You can help with symptom analysis, appointments, medications, health coaching, emergencies, and all healthcare needs. Provide supportive and informative responses. Always recommend consulting with healthcare professionals for serious symptoms. Keep responses concise and clear for voice interaction. If the user says goodbye or wants to end the conversation, acknowledge it warmly.',
-        },
-        ...conversationHistory,
-        {
-          role: 'user',
-          content: transcript,
-        },
-      ];
+    
+    // Convert blob to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Audio = (reader.result as string).split(',')[1];
+      
+      // Send to server
+      wsRef.current?.send(JSON.stringify({
+        type: 'audio',
+        data: base64Audio
+      }));
+    };
+    reader.readAsDataURL(audioBlob);
+  }, []);
 
-      const response = await bedrockApi.chatCompletion({
-        messages,
-        temperature: 0.7,
-      });
-
-      if (response.success && response.content) {
-        const responseText = response.content;
-        setAssistantResponse(responseText);
-        
-        // Update conversation history
-        setConversationHistory(prev => [
-          ...prev,
-          { role: 'user', content: transcript },
-          { role: 'assistant', content: responseText },
-        ]);
-        
-        // Speak the response (will auto-restart listening after)
-        await speak(responseText);
-      } else {
-        const errorMsg = "I'm sorry, I'm having trouble right now. Please try again.";
-        setAssistantResponse(errorMsg);
-        await speak(errorMsg);
-      }
-    } catch (error) {
-      console.error('Error processing voice input:', error);
-      const errorMsg = 'I apologize, there was an error. Please try again.';
-      setAssistantResponse(errorMsg);
-      await speak(errorMsg);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [isProcessing, conversationHistory, speak, onClose]);
-
+  // Start recording
   const startListening = async () => {
     if (isSpeaking || isListening || isProcessing) return;
 
@@ -179,27 +178,8 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop());
         
-        // Transcribe audio using Whisper
-        try {
-          setIsProcessing(true);
-          const transcription = await bedrockApi.transcribeAudio(audioBlob);
-          
-          if (transcription.success && transcription.text) {
-            setCurrentTranscript(transcription.text);
-            await processVoiceInput(transcription.text);
-          } else {
-            const errorMsg = "Sorry, I couldn't understand that. Please try again.";
-            setAssistantResponse(errorMsg);
-            await speak(errorMsg);
-          }
-        } catch (error) {
-          console.error('Error transcribing audio:', error);
-          const errorMsg = 'There was an error processing your audio. Please try again.';
-          setAssistantResponse(errorMsg);
-          await speak(errorMsg);
-        } finally {
-          setIsProcessing(false);
-        }
+        // Send audio via WebSocket
+        await sendAudio(audioBlob);
       };
 
       mediaRecorder.start();
@@ -210,9 +190,10 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
     }
   };
 
+  // Toggle recording
   const toggleListening = async () => {
     if (isListening) {
-      // Stop recording - this will trigger transcription
+      // Stop recording - this will trigger sending
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
@@ -232,19 +213,22 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
     }
   };
 
-  // Initial greeting when modal opens
+  // Connect WebSocket when modal opens
   useEffect(() => {
     if (isOpen) {
-      setConversationHistory([]);
+      connectWebSocket();
       setCurrentTranscript('');
       setAssistantResponse('');
-      
-      // Play welcome message and start listening
-      const greeting = "Hello! I'm AIRA, your comprehensive AI medical assistant. How can I help you today?";
-      setAssistantResponse(greeting);
-      speak(greeting);
     }
-  }, [isOpen, speak]);
+    
+    return () => {
+      // Cleanup
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [isOpen, connectWebSocket]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -256,11 +240,11 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
         currentAudioRef.current.pause();
         currentAudioRef.current = null;
       }
-      if (autoListenTimeoutRef.current) {
-        clearTimeout(autoListenTimeoutRef.current);
-      }
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
+      }
+      if (wsRef.current) {
+        wsRef.current.close();
       }
     };
   }, []);
@@ -273,16 +257,17 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
       currentAudioRef.current.pause();
       currentAudioRef.current = null;
     }
-    if (autoListenTimeoutRef.current) {
-      clearTimeout(autoListenTimeoutRef.current);
-    }
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
     }
     setIsListening(false);
     setCurrentTranscript('');
     setAssistantResponse('');
-    setConversationHistory([]);
+    setConnectionStatus('disconnected');
     onClose();
   };
 
@@ -295,10 +280,30 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
             <h3 className="text-xl font-semibold flex items-center justify-center gap-2">
               🤖 AIRA Voice Assistant
             </h3>
-            <div className="flex items-center justify-center gap-2 mt-3 text-green-600">
-              <div className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-blue-600 animate-pulse' : isListening ? 'bg-red-600 animate-pulse' : 'bg-green-600'}`} />
-              <span className="text-sm">
-                {isSpeaking ? 'AIRA is speaking...' : isListening ? 'Listening...' : isProcessing ? 'Processing...' : 'Connected'}
+            <div className="flex items-center justify-center gap-2 mt-3">
+              <div className={`w-2 h-2 rounded-full ${
+                connectionStatus === 'connected' 
+                  ? isSpeaking 
+                    ? 'bg-blue-600 animate-pulse' 
+                    : isListening 
+                      ? 'bg-red-600 animate-pulse' 
+                      : 'bg-green-600'
+                  : connectionStatus === 'connecting'
+                    ? 'bg-yellow-600 animate-pulse'
+                    : 'bg-gray-400'
+              }`} />
+              <span className="text-sm text-slate-600">
+                {connectionStatus === 'connected'
+                  ? isSpeaking 
+                    ? 'AIRA is speaking...' 
+                    : isListening 
+                      ? 'Listening...' 
+                      : isProcessing 
+                        ? 'Processing...' 
+                        : 'Connected'
+                  : connectionStatus === 'connecting'
+                    ? 'Connecting...'
+                    : 'Disconnected'}
               </span>
             </div>
           </div>
@@ -336,13 +341,15 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
           {/* Instructions */}
           <div className="text-slate-600 text-sm">
             <p>
-              {isSpeaking 
-                ? 'AIRA is responding... (Click mic to interrupt)' 
-                : isListening 
-                  ? 'Recording... Click again when done speaking' 
-                  : isProcessing 
-                    ? 'Processing your request...' 
-                    : 'Click microphone to start speaking'}
+              {connectionStatus !== 'connected'
+                ? 'Connecting to AIRA...'
+                : isSpeaking 
+                  ? 'AIRA is responding... (Click mic to interrupt)' 
+                  : isListening 
+                    ? 'Recording... Click again when done speaking' 
+                    : isProcessing 
+                      ? 'Processing your request...' 
+                      : 'Click microphone to start speaking'}
             </p>
             <p className="text-xs mt-1 text-slate-400">
               {isListening ? 'Click mic to stop and send' : 'Say "goodbye" to end the conversation'}
@@ -354,7 +361,7 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
             <Button
               onClick={toggleListening}
               size="lg"
-              disabled={isProcessing}
+              disabled={isProcessing || connectionStatus !== 'connected'}
               className={`w-16 h-16 rounded-full ${
                 isListening ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-indigo-600 hover:bg-indigo-700'
               }`}
