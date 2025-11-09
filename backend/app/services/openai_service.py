@@ -153,40 +153,40 @@ class OpenAIService:
                 "model": settings.openai_model,
             }
 
-async def transcribe_audio(
-        self,
-        audio_file: tuple
-    ) -> str:
-        """
-        Transcribe audio using OpenAI Whisper.
+    async def transcribe_audio(
+            self,
+            audio_file: tuple
+        ) -> str:
+            """
+            Transcribe audio using OpenAI Whisper.
 
-        Args:
-            audio_file: Tuple of (filename, audio_data, content_type)
+            Args:
+                audio_file: Tuple of (filename, audio_data, content_type)
 
-        Returns:
-            Transcribed text
+            Returns:
+                Transcribed text
 
-        Raises:
-            Exception: If transcription fails
-        """
-        try:
-            filename, audio_data, content_type = audio_file
-            
-            # Create a file-like object
-            import io
-            audio_buffer = io.BytesIO(audio_data)
-            audio_buffer.name = filename
+            Raises:
+                Exception: If transcription fails
+            """
+            try:
+                filename, audio_data, content_type = audio_file
+                
+                # Create a file-like object
+                import io
+                audio_buffer = io.BytesIO(audio_data)
+                audio_buffer.name = filename
 
-            # Use sync client for file upload
-            response = self.sync_client.audio.transcriptions.create(
-                model="whisper-1",
-                file=(filename, audio_data, content_type)
-            )
-            
-            return response.text
+                # Use sync client for file upload
+                response = self.sync_client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=(filename, audio_data, content_type)
+                )
+                
+                return response.text
 
-        except Exception as e:
-            raise Exception(f"Whisper transcription error: {str(e)}")
+            except Exception as e:
+                raise Exception(f"Whisper transcription error: {str(e)}")
 
 
 # Singleton instance
