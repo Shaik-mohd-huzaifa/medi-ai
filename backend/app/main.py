@@ -4,7 +4,6 @@ from app.config import settings
 from app.routes import openai_router
 from app.routes.transcription import router as transcription_router
 from app.routes.voice import router as voice_router
-from app.routes.search import router as search_router
 from app.routes.websocket import router as websocket_router
 
 # Create FastAPI application
@@ -29,7 +28,6 @@ app.add_middleware(
 app.include_router(openai_router)
 app.include_router(transcription_router)
 app.include_router(voice_router)
-app.include_router(search_router)
 app.include_router(websocket_router)
 
 
