@@ -54,13 +54,6 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
         URL.revokeObjectURL(audioUrl);
         currentAudioRef.current = null;
         setIsSpeaking(false);
-        
-        // Auto-restart listening after AIRA finishes speaking (if not closed)
-        if (isOpen && !isListening) {
-          autoListenTimeoutRef.current = setTimeout(() => {
-            startListening();
-          }, 500); // Small delay before restarting
-        }
       };
       
       await audio.play();
@@ -78,18 +71,12 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
         
         utterance.onend = () => {
           setIsSpeaking(false);
-          // Auto-restart listening
-          if (isOpen && !isListening) {
-            autoListenTimeoutRef.current = setTimeout(() => {
-              startListening();
-            }, 500);
-          }
         };
         
         window.speechSynthesis.speak(utterance);
       }
     }
-  }, [isOpen, isListening]);
+  }, []);
 
   const processVoiceInput = useCallback(async (transcript: string) => {
     if (isProcessing) return;
@@ -211,11 +198,21 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
 
   const toggleListening = async () => {
     if (isListening) {
-      // Stop recording
+      // Stop recording - this will trigger transcription
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
     } else {
+      // Stop AIRA's voice if speaking
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      setIsSpeaking(false);
+      
       // Start recording
       await startListening();
     }
@@ -323,14 +320,16 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
           <div className="text-slate-600 text-sm">
             <p>
               {isSpeaking 
-                ? 'AIRA is responding...' 
+                ? 'AIRA is responding... (Click mic to interrupt)' 
                 : isListening 
-                  ? 'Speak now...' 
+                  ? 'Recording... Click again when done speaking' 
                   : isProcessing 
                     ? 'Processing your request...' 
-                    : 'Click the microphone to speak'}
+                    : 'Click microphone to start speaking'}
             </p>
-            <p className="text-xs mt-1 text-slate-400">Say "goodbye" to end the conversation</p>
+            <p className="text-xs mt-1 text-slate-400">
+              {isListening ? 'Click mic to stop and send' : 'Say "goodbye" to end the conversation'}
+            </p>
           </div>
 
           {/* Controls */}
@@ -338,7 +337,7 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
             <Button
               onClick={toggleListening}
               size="lg"
-              disabled={isSpeaking || isProcessing}
+              disabled={isProcessing}
               className={`w-16 h-16 rounded-full ${
                 isListening ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-indigo-600 hover:bg-indigo-700'
               }`}
