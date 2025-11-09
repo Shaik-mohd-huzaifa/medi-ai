@@ -153,6 +153,38 @@ class OpenAIService:
                 "model": settings.openai_model,
             }
 
+    async def transcribe_audio(self, audio_file: tuple) -> str:
+        """
+        Transcribe audio using OpenAI Whisper.
+
+        Args:
+            audio_file: Tuple of (filename, audio_data, content_type)
+
+        Returns:
+            Transcribed text
+
+        Raises:
+            Exception: If transcription fails
+        """
+        try:
+            filename, audio_data, content_type = audio_file
+            
+            # Create a file-like object
+            import io
+            audio_buffer = io.BytesIO(audio_data)
+            audio_buffer.name = filename
+            
+            # Transcribe using Whisper
+            transcription = self.sync_client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_buffer,
+            )
+            
+            return transcription.text
+
+        except Exception as e:
+            raise Exception(f"Whisper transcription error: {str(e)}")
+
 
 # Singleton instance
 openai_service = OpenAIService()
