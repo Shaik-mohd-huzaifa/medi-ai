@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Bot, Mic, Phone } from 'lucide-react';
 
 interface VoiceCallModalProps {
   isOpen: boolean;
@@ -284,7 +285,8 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
           {/* Header */}
           <div>
             <h3 className="text-xl font-semibold flex items-center justify-center gap-2">
-              🤖 AIRA Voice Assistant
+              <Bot className="w-6 h-6" />
+              AIRA Voice Assistant
             </h3>
             <div className="flex items-center justify-center gap-2 mt-3">
               <div className={`w-2 h-2 rounded-full ${
@@ -317,11 +319,11 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
           {/* Voice Avatar */}
           <div className="py-8">
             <div
-              className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-4xl shadow-lg ${
+              className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg ${
                 isListening || isSpeaking ? 'animate-pulse' : ''
               }`}
             >
-              🤖
+              <Bot className="w-10 h-10 text-white" />
             </div>
           </div>
 
@@ -372,10 +374,11 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
                 isListening ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-indigo-600 hover:bg-indigo-700'
               }`}
             >
-              <span className="text-2xl">🎤</span>
+              <Mic className="w-6 h-6" />
             </Button>
-            <Button onClick={handleClose} variant="destructive" size="lg">
-              📞 End Call
+            <Button onClick={handleClose} variant="destructive" size="lg" className="gap-2">
+              <Phone className="w-5 h-5" />
+              End Call
             </Button>
           </div>
         </div>
