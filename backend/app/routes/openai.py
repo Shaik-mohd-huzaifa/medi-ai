@@ -113,17 +113,29 @@ async def chat_completion(request: ChatRequest):
     Raises:
         HTTPException: If chat completion fails
     """
+    print("=" * 50)
+    print("💬 CHAT REQUEST RECEIVED")
+    print(f"Messages count: {len(request.messages)}")
+    print(f"Temperature: {request.temperature}")
+    print("=" * 50)
+    
     try:
         # Convert Pydantic models to dicts
         messages = [msg.model_dump() for msg in request.messages]
+        
+        print("🔄 Calling OpenAI service...")
 
         result = await openai_service.chat_completion(
             messages=messages,
             temperature=request.temperature,
             system_prompt=request.system_prompt,
         )
+        
+        print("✅ OpenAI service returned result")
+        print(f"Success: {result.get('success')}")
 
         if not result["success"]:
+            print(f"❌ Chat completion failed: {result.get('error')}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Chat completion failed: {result.get('error', 'Unknown error')}",
@@ -134,6 +146,9 @@ async def chat_completion(request: ChatRequest):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"❌ EXCEPTION in chat completion: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An unexpected error occurred: {str(e)}",
