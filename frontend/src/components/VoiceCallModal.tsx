@@ -26,18 +26,21 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
   const connectWebSocket = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
+    console.log('Attempting to connect to WebSocket...');
     setConnectionStatus('connecting');
-    const ws = new WebSocket('ws://localhost:8000/ws/voice');
     
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      setConnectionStatus('connected');
+    try {
+      const ws = new WebSocket('ws://localhost:8000/ws/voice');
       
-      // Send initial greeting request
-      const greeting = "Hello! I'm AIRA, your comprehensive AI medical assistant. How can I help you today?";
-      setAssistantResponse(greeting);
-      playAudio(greeting);
-    };
+      ws.onopen = () => {
+        console.log('✅ WebSocket connected successfully!');
+        setConnectionStatus('connected');
+        
+        // Send initial greeting request
+        const greeting = "Hello! I'm AIRA, your comprehensive AI medical assistant. How can I help you today?";
+        setAssistantResponse(greeting);
+        playAudio(greeting);
+      };
     
     ws.onmessage = async (event) => {
       const data = JSON.parse(event.data);
@@ -83,16 +86,23 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
     };
     
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error('❌ WebSocket error:', error);
+      console.error('Make sure backend is running on http://localhost:8000');
+      setConnectionStatus('disconnected');
+      alert('Failed to connect to voice server. Make sure the backend is running on port 8000.');
+    };
+    
+    ws.onclose = (event) => {
+      console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
       setConnectionStatus('disconnected');
     };
     
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
+      wsRef.current = ws;
+    } catch (error) {
+      console.error('❌ Failed to create WebSocket:', error);
       setConnectionStatus('disconnected');
-    };
-    
-    wsRef.current = ws;
+      alert('Failed to connect to voice server. Error: ' + error);
+    }
   }, [onClose]);
 
   // Play audio from blob
