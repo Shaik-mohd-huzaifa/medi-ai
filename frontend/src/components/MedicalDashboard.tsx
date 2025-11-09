@@ -6,76 +6,63 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Sidebar } from '@/components/Sidebar';
 import { VoiceCallModal } from '@/components/VoiceCallModal';
-import { Settings, Share2, MoreVertical, Paperclip, Mic, Send, Mail, Calendar, Phone } from 'lucide-react';
+import { Paperclip, Mic, Send, Mail, Calendar, Phone } from 'lucide-react';
 import { bedrockApi } from '@/services/api';
 
-const agentInfo: Record<string, { name: string; description: string; icon: string }> = {
-  'symptom-checker': {
-    name: 'Symptom Checker',
-    description: 'Analyzes your symptoms and provides preliminary health assessments. Helps identify potential conditions and recommends next steps.',
-    icon: '🔍',
-  },
-  'appointment-scheduler': {
-    name: 'Appointment Scheduler',
-    description: 'Schedules and manages your medical appointments. Sends reminders and coordinates with healthcare providers.',
-    icon: '📅',
-  },
-  'medication-advisor': {
-    name: 'Medication Advisor',
-    description: 'Provides information about medications, dosages, and potential interactions. Helps track your medication schedule.',
-    icon: '💊',
-  },
-  'triage-assistant': {
-    name: 'Triage Assistant',
-    description: 'Assesses urgency of medical conditions and recommends appropriate level of care.',
-    icon: '🚑',
-  },
-  'health-coach': {
-    name: 'Health Coach',
-    description: 'Provides personalized wellness guidance and lifestyle recommendations.',
-    icon: '💪',
-  },
-};
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export default function MedicalDashboard() {
-  const [selectedAgent, setSelectedAgent] = useState('symptom-checker');
   const [userInput, setUserInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isVoiceCallActive, setIsVoiceCallActive] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const sendMessage = async () => {
-    if (!userInput.trim()) return;
+    if (!userInput.trim() || isLoading) return;
+
+    const userMessage: Message = { role: 'user', content: userInput };
+    setMessages(prev => [...prev, userMessage]);
+    setUserInput('');
+    setIsLoading(true);
 
     try {
       const response = await bedrockApi.chatCompletion({
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful medical AI assistant. Provide supportive and informative responses about health concerns. Always recommend consulting with healthcare professionals for serious symptoms.',
+            content: 'You are AIRA (AI Responsive & Intelligent Assistant), a comprehensive medical AI assistant. You can help with symptom analysis, appointments, medications, health coaching, emergencies, and all healthcare needs. Provide supportive and informative responses about health concerns. Always recommend consulting with healthcare professionals for serious symptoms.',
           },
+          ...messages.map(m => ({ role: m.role, content: m.content })),
           {
             role: 'user',
-            content: userInput,
+            content: userMessage.content,
           },
         ],
-        max_tokens: 1024,
         temperature: 0.7,
       });
 
       if (response.success && response.content) {
-        alert(`Medical AI Response:\n\n${response.content}`);
+        setMessages(prev => [...prev, { role: 'assistant', content: response.content || '' }]);
       } else {
-        alert("Sorry, I'm having trouble connecting to the medical database. Please try again.");
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: "Sorry, I'm having trouble connecting right now. Please try again." 
+        }]);
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('There was an error processing your request. Please try again.');
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'There was an error processing your request. Please try again.' 
+      }]);
+    } finally {
+      setIsLoading(false);
     }
-
-    setUserInput('');
   };
-
-  const currentAgent = agentInfo[selectedAgent] || agentInfo['symptom-checker'];
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -93,7 +80,7 @@ export default function MedicalDashboard() {
       />
 
       {/* Sidebar */}
-      <Sidebar selectedAgent={selectedAgent} onSelectAgent={setSelectedAgent} />
+      <Sidebar selectedAgent="aira" onSelectAgent={() => {}} />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-white">
@@ -112,76 +99,109 @@ export default function MedicalDashboard() {
               <Phone className="h-4 w-4 mr-2" />
               Voice Call
             </Button>
-            <Button variant="ghost" size="sm" className="text-sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Configuration
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto px-8 py-12">
-          <div className="max-w-3xl mx-auto space-y-8">
-            {/* Agent Icon and Title */}
-            <div className="text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-red-400 to-orange-400 animate-pulse">
-                <div className="w-16 h-16 rounded-full border-4 border-white/30 flex items-center justify-center">
-                  <span className="text-3xl">{currentAgent.icon}</span>
+          <div className="max-w-3xl mx-auto">
+            {messages.length === 0 ? (
+              /* Welcome Screen */
+              <div className="space-y-8">
+                <div className="text-center space-y-4">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 animate-pulse">
+                    <div className="w-16 h-16 rounded-full border-4 border-white/30 flex items-center justify-center">
+                      <span className="text-3xl">🤖</span>
+                    </div>
+                  </div>
+                  <h1 className="text-3xl font-semibold">AIRA Medical Assistant</h1>
+                  <p className="text-gray-600 max-w-xl mx-auto">
+                    Your comprehensive AI medical assistant. Ask me anything about your health, symptoms, medications, or appointments.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm text-gray-500 text-center">Try asking about:</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer border-gray-200" onClick={() => setUserInput('I have a headache and fever')}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2 bg-gray-100 rounded-lg">
+                            <Mail className="h-5 w-5 text-gray-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-900 font-medium mb-1">
+                              Check my symptoms
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Analyze your current health concerns
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer border-gray-200" onClick={() => setUserInput('Help me schedule an appointment')}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2 bg-gray-100 rounded-lg">
+                            <Calendar className="h-5 w-5 text-gray-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-900 font-medium mb-1">
+                              Schedule appointment
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Book a consultation with your doctor
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
               </div>
-              <h1 className="text-3xl font-semibold">{currentAgent.name}</h1>
-              <p className="text-gray-600 max-w-xl mx-auto">
-                {currentAgent.description}
-              </p>
-            </div>
-
-            {/* Suggested Prompts */}
-            <div className="space-y-4">
-              <h3 className="text-sm text-gray-500 text-center">Today&apos;s suggested prompt</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="hover:shadow-md transition-shadow cursor-pointer border-gray-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-gray-100 rounded-lg">
-                        <Mail className="h-5 w-5 text-gray-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-900 font-medium mb-1">
-                          Check my symptoms
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Analyze your current health concerns
-                        </p>
+            ) : (
+              /* Chat Messages */
+              <div className="space-y-6">
+                {messages.map((message, index) => (
+                  <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] rounded-lg p-4 ${
+                      message.role === 'user' 
+                        ? 'bg-teal-600 text-white' 
+                        : 'bg-gray-100 text-gray-900'
+                    }`}>
+                      <div className="flex items-start gap-3">
+                        {message.role === 'assistant' && (
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 flex items-center justify-center text-xs flex-shrink-0">
+                            🤖
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="hover:shadow-md transition-shadow cursor-pointer border-gray-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-gray-100 rounded-lg">
-                        <Calendar className="h-5 w-5 text-gray-600" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-900 font-medium mb-1">
-                          Schedule appointment
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Book a consultation with your doctor
-                        </p>
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[80%] rounded-lg p-4 bg-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 flex items-center justify-center text-xs">
+                          🤖
+                        </div>
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                        </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
         </div>
 

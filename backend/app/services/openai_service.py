@@ -8,6 +8,8 @@ class OpenAIService:
 
     def __init__(self):
         """Initialize OpenAI client."""
+        if not settings.openai_api_key:
+            raise ValueError("OPENAI_API_KEY is not set in environment variables")
         self.client = AsyncOpenAI(api_key=settings.openai_api_key)
         self.sync_client = OpenAI(api_key=settings.openai_api_key)
 
@@ -151,7 +153,7 @@ class OpenAIService:
                 "model": settings.openai_model,
             }
 
-    async def transcribe_audio(
+async def transcribe_audio(
         self,
         audio_file: tuple
     ) -> str:
@@ -170,6 +172,11 @@ class OpenAIService:
         try:
             filename, audio_data, content_type = audio_file
             
+            # Create a file-like object
+            import io
+            audio_buffer = io.BytesIO(audio_data)
+            audio_buffer.name = filename
+
             # Use sync client for file upload
             response = self.sync_client.audio.transcriptions.create(
                 model="whisper-1",
