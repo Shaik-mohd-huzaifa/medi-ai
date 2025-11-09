@@ -138,4 +138,54 @@ export const bedrockApi = {
       throw error;
     }
   },
+
+  /**
+   * Search the web using Firecrawl
+   */
+  async searchWeb(query: string, limit: number = 5, format: string = 'markdown'): Promise<any> {
+    try {
+      const response = await apiClient.post('/api/v1/search/web', {
+        query,
+        limit,
+        format,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error searching web:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Scrape a URL using Firecrawl
+   */
+  async scrapeUrl(url: string, formats: string[] = ['markdown']): Promise<any> {
+    try {
+      const response = await apiClient.post('/api/v1/search/scrape', {
+        url,
+        formats,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error scraping URL:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Crawl a website using Firecrawl
+   */
+  async crawlWebsite(url: string, maxDepth: number = 2, limit: number = 10): Promise<any> {
+    try {
+      const response = await apiClient.post('/api/v1/search/crawl', {
+        url,
+        max_depth: maxDepth,
+        limit,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error crawling website:', error);
+      throw error;
+    }
+  },
 };
