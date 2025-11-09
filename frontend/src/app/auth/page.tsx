@@ -44,15 +44,17 @@ export default function AuthPage() {
 
     try {
       const { authApi } = await import('@/services/authApi');
-      const response = await authApi.patientSignup({
+      await authApi.patientSignup({
         email,
         password,
         full_name: fullName,
         phone_number: phoneNumber,
       });
       
-      setAuthData(response);
-      router.push('/dashboard');
+      // Show success message and redirect to login
+      alert('Account created successfully! Please log in.');
+      setMode('login');
+      setError('');
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Signup failed. Please try again.');
     } finally {
