@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Sidebar } from '@/components/Sidebar';
 import { VoiceCallModal } from '@/components/VoiceCallModal';
-import { Paperclip, Mic, Send, Mail, Calendar, Phone } from 'lucide-react';
+import { Paperclip, Mic, Send, Mail, Calendar, Phone, LogOut } from 'lucide-react';
 import { bedrockApi } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,11 +17,18 @@ interface Message {
 }
 
 export default function MedicalDashboard() {
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [userInput, setUserInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isVoiceCallActive, setIsVoiceCallActive] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/auth');
+  };
 
   const sendMessage = async () => {
     if (!userInput.trim() || isLoading) return;
@@ -103,6 +112,11 @@ export default function MedicalDashboard() {
         <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-medium text-gray-700">Medical AI Assistant</h2>
+            {user && (
+              <span className="text-xs text-gray-500 ml-4">
+                Welcome, {user.full_name}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button 
@@ -113,6 +127,14 @@ export default function MedicalDashboard() {
             >
               <Phone className="h-4 w-4 mr-2" />
               Voice Call
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
             </Button>
           </div>
         </div>
