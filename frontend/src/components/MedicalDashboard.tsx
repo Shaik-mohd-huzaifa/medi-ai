@@ -219,13 +219,21 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
           </div>
           <div className="flex items-center gap-2">
             <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => router.push('/caregivers')}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Browse All
+            </Button>
+            <Button 
               variant="default" 
               size="sm" 
               className="bg-teal-600 hover:bg-teal-700 text-white"
               onClick={handleFindCaregivers}
             >
               <Users className="h-4 w-4 mr-2" />
-              Find Caregivers
+              Find Match
             </Button>
             <Button 
               variant="default" 
