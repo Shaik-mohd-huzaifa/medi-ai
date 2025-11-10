@@ -26,45 +26,69 @@ async def create_conversation(
     Create a new conversation between patient and caregiver.
     Patient initiates conversation by clicking "Seek Care".
     """
-    # Check if conversation already exists
-    existing = db.query(Conversation).filter(
-        Conversation.patient_id == current_user.id,
-        Conversation.caregiver_id == data.caregiver_id,
-        Conversation.status == ConversationStatus.ACTIVE
-    ).first()
-    
-    if existing:
-        # Return existing conversation
-        return format_conversation_response(existing, db)
+    try:
+        print(f"🔍 Creating conversation - Patient ID: {current_user.id}, Caregiver ID: {data.caregiver_id}")
+        
+        # Check if conversation already exists
+        existing = db.query(Conversation).filter(
+            Conversation.patient_id == current_user.id,
+            Conversation.caregiver_id == data.caregiver_id,
+            Conversation.status == ConversationStatus.ACTIVE
+        ).first()
+        
+        if existing:
+            print(f"✅ Found existing conversation: {existing.id}")
+            # Return existing conversation
+            return format_conversation_response(existing, db)
+    except Exception as e:
+        print(f"❌ Error checking existing conversation: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating conversation: {str(e)}"
+        )
     
     # Create new conversation
-    conversation = Conversation(
-        patient_id=current_user.id,
-        caregiver_id=data.caregiver_id,
-        status=ConversationStatus.ACTIVE
-    )
-    
-    db.add(conversation)
-    db.commit()
-    db.refresh(conversation)
-    
-    # Send initial message if provided
-    if data.initial_message:
-        message = Message(
-            conversation_id=conversation.id,
-            sender_id=current_user.id,
-            content=data.initial_message,
-            message_type=MessageType.TEXT
+    try:
+        conversation = Conversation(
+            patient_id=current_user.id,
+            caregiver_id=data.caregiver_id,
+            status=ConversationStatus.ACTIVE
         )
-        db.add(message)
-        conversation.last_message_at = datetime.utcnow()
-        conversation.caregiver_unread_count += 1
-        db.commit()
         
-        # Notify caregiver via WebSocket
-        await notify_new_message(message, db)
-    
-    return format_conversation_response(conversation, db)
+        db.add(conversation)
+        db.commit()
+        db.refresh(conversation)
+        print(f"✅ Created new conversation: {conversation.id}")
+        
+        # Send initial message if provided
+        if data.initial_message:
+            message = Message(
+                conversation_id=conversation.id,
+                sender_id=current_user.id,
+                content=data.initial_message,
+                message_type=MessageType.TEXT
+            )
+            db.add(message)
+            conversation.last_message_at = datetime.utcnow()
+            conversation.caregiver_unread_count += 1
+            db.commit()
+            print(f"✅ Sent initial message")
+            
+            # Notify caregiver via WebSocket
+            await notify_new_message(message, db)
+        
+        return format_conversation_response(conversation, db)
+    except Exception as e:
+        print(f"❌ Error creating conversation: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating conversation: {str(e)}"
+        )
 
 
 @router.get("/conversations", response_model=List[ConversationResponse])
