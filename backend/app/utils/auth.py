@@ -58,21 +58,30 @@ def get_current_user(
     )
     
     try:
+        print(f"🔍 Validating token: {token[:30]}...")
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         email: str = payload.get("sub")
+        print(f"✅ Token decoded, email: {email}")
         
         if email is None:
+            print("❌ Email not found in token payload")
             raise credentials_exception
         
         token_data = TokenData(email=email)
-    except JWTError:
+    except JWTError as e:
+        print(f"❌ JWT Error: {str(e)}")
+        raise credentials_exception
+    except Exception as e:
+        print(f"❌ Unexpected error during token decode: {str(e)}")
         raise credentials_exception
     
     user = db.query(User).filter(User.email == token_data.email).first()
     
     if user is None:
+        print(f"❌ User not found for email: {token_data.email}")
         raise credentials_exception
     
+    print(f"✅ User authenticated: {user.email} (ID: {user.id})")
     return user
 
 
