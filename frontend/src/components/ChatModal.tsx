@@ -65,7 +65,7 @@ export function ChatModal({
   const initializeChat = async () => {
     try {
       // Create or get conversation
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await fetch('http://localhost:8000/api/v1/chat/conversations', {
         method: 'POST',
         headers: {
@@ -95,7 +95,7 @@ export function ChatModal({
 
   const loadMessages = async (convId: number) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await fetch(`http://localhost:8000/api/v1/chat/conversations/${convId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -166,7 +166,7 @@ export function ChatModal({
     if (!newMessage.trim() || !conversationId) return;
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       const response = await fetch('http://localhost:8000/api/v1/chat/messages', {
         method: 'POST',
         headers: {
@@ -192,7 +192,7 @@ export function ChatModal({
 
   const markAsRead = async (convId: number) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('access_token');
       await fetch('http://localhost:8000/api/v1/chat/mark-read', {
         method: 'POST',
         headers: {
