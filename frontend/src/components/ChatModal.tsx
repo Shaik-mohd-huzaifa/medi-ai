@@ -181,6 +181,10 @@ export function ChatModal({
 
     try {
       const token = localStorage.getItem('access_token');
+      console.log('🔍 Sending message - Token exists:', !!token);
+      console.log('🔍 Sending message - Token preview:', token?.substring(0, 20) + '...');
+      console.log('🔍 Sending message - Conversation ID:', conversationId);
+      
       const response = await fetch('http://localhost:8000/api/v1/chat/messages', {
         method: 'POST',
         headers: {
@@ -194,13 +198,21 @@ export function ChatModal({
         })
       });
 
+      console.log('📥 Send message response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Message sent successfully:', data);
         setMessages(prev => [...prev, data]);
         setNewMessage('');
+      } else {
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('❌ Failed to send message:', response.status, errorData);
+        alert(`Failed to send message: ${errorData.detail || 'Please login again'}`);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
+      alert(`Error sending message: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

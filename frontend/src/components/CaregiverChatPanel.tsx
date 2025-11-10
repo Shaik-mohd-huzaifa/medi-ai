@@ -167,6 +167,10 @@ export function CaregiverChatPanel() {
 
     try {
       const token = localStorage.getItem('access_token');
+      console.log('🔍 [Caregiver] Sending message - Token exists:', !!token);
+      console.log('🔍 [Caregiver] Token preview:', token?.substring(0, 20) + '...');
+      console.log('🔍 [Caregiver] Conversation ID:', selectedConversation);
+      
       const response = await fetch('http://localhost:8000/api/v1/chat/messages', {
         method: 'POST',
         headers: {
@@ -180,16 +184,24 @@ export function CaregiverChatPanel() {
         })
       });
 
+      console.log('📥 [Caregiver] Send message response:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ [Caregiver] Message sent successfully');
         setMessages(prev => [...prev, data]);
         setNewMessage('');
         
         // Update conversation list
         loadConversations();
+      } else {
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('❌ [Caregiver] Failed to send message:', response.status, errorData);
+        alert(`Failed to send message: ${errorData.detail || 'Please login again'}`);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ [Caregiver] Error sending message:', error);
+      alert(`Error sending message: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
