@@ -196,4 +196,48 @@ export const bedrockApi = {
       throw error;
     }
   },
+
+  /**
+   * Match caregivers based on patient needs
+   */
+  async matchCaregivers(params: {
+    symptoms?: string;
+    urgency?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    consultation_mode?: string;
+    specialization?: string;
+    limit?: number;
+  }): Promise<any> {
+    try {
+      const response = await apiClient.post('/api/v1/caregivers/match', params);
+      return response.data;
+    } catch (error) {
+      console.error('Error matching caregivers:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * List all caregivers with optional filters
+   */
+  async listCaregivers(params?: {
+    city?: string;
+    state?: string;
+    country?: string;
+    specialization?: string;
+    limit?: number;
+  }): Promise<any> {
+    try {
+      const queryParams = new URLSearchParams(
+        Object.entries(params || {}).filter(([_, v]) => v != null).map(([k, v]) => [k, String(v)])
+      );
+      const response = await apiClient.get(`/api/v1/caregivers/list?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error listing caregivers:', error);
+      throw error;
+    }
+  },
 };

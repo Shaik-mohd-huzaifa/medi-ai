@@ -168,8 +168,9 @@ async def caregiver_step3_services(
     
     # Update services information
     profile.specialization = ", ".join(data.specializations)
+    profile.consultation_modes = ", ".join(data.consultation_modes)
     profile.onboarding_step = 3
-    profile.onboarding_completed = True
+    profile.profile_completed = True
     
     db.commit()
     

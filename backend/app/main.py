@@ -6,6 +6,7 @@ from app.routes.transcription import router as transcription_router
 from app.routes.voice import router as voice_router
 from app.routes.websocket import router as websocket_router
 from app.routes.auth import router as auth_router
+from app.routes.caregivers import router as caregivers_router
 from app.database import engine, Base
 from app.models.user import User, PatientProfile, CaregiverProfile
 
@@ -32,6 +33,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router)
+app.include_router(caregivers_router)
 app.include_router(openai_router)
 app.include_router(transcription_router)
 app.include_router(voice_router)

@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Sidebar } from '@/components/Sidebar';
 import { VoiceCallModal } from '@/components/VoiceCallModal';
-import { Paperclip, Mic, Send, Mail, Calendar, Phone, LogOut } from 'lucide-react';
+import { CaregiverRecommendations } from '@/components/CaregiverRecommendations';
+import { Paperclip, Mic, Send, Mail, Calendar, Phone, LogOut, Users } from 'lucide-react';
 import { bedrockApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -24,10 +25,33 @@ export default function MedicalDashboard() {
   const [isVoiceCallActive, setIsVoiceCallActive] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCaregiverRecommendations, setShowCaregiverRecommendations] = useState(false);
+  const [recommendedCaregivers, setRecommendedCaregivers] = useState<any[]>([]);
 
   const handleLogout = () => {
     logout();
     router.push('/auth');
+  };
+
+  const handleFindCaregivers = async () => {
+    try {
+      // Extract symptoms and urgency from conversation
+      const lastMessages = messages.slice(-5).map(m => m.content).join(' ');
+      
+      const params = {
+        symptoms: lastMessages || 'general consultation',
+        urgency: 'medium',
+        country: 'India',
+        limit: 3
+      };
+
+      const caregivers = await bedrockApi.matchCaregivers(params);
+      setRecommendedCaregivers(caregivers);
+      setShowCaregiverRecommendations(true);
+    } catch (error) {
+      console.error('Error finding caregivers:', error);
+      alert('Failed to find caregivers. Please try again.');
+    }
   };
 
   const sendMessage = async () => {
@@ -170,6 +194,14 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
         onClose={() => setIsVoiceCallActive(false)} 
       />
 
+      {/* Caregiver Recommendations Modal */}
+      {showCaregiverRecommendations && (
+        <CaregiverRecommendations
+          caregivers={recommendedCaregivers}
+          onClose={() => setShowCaregiverRecommendations(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <Sidebar selectedAgent="aira" onSelectAgent={() => {}} />
 
@@ -186,6 +218,15 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="bg-teal-600 hover:bg-teal-700 text-white"
+              onClick={handleFindCaregivers}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Find Caregivers
+            </Button>
             <Button 
               variant="default" 
               size="sm" 

@@ -111,8 +111,11 @@ class CaregiverProfile(Base):
     
     # Professional Information
     license_number = Column(String, nullable=True)
-    specialization = Column(String, nullable=True)  # For individual doctors
+    specialization = Column(String, nullable=True)  # Comma-separated specializations
+    consultation_modes = Column(String, nullable=True)  # Comma-separated: chat, video, in-person
     years_of_experience = Column(Integer, nullable=True)
+    rating = Column(Integer, default=5)  # 1-5 rating
+    total_consultations = Column(Integer, default=0)
     
     # Business Address
     business_address_line1 = Column(String, nullable=True)
