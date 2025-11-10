@@ -350,70 +350,107 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
                       </div>
                     </div>
                     
-                    {/* Tool Results Display */}
+                    {/* Tool Results Display - Caregiver Cards */}
                     {message.tool_results && message.tool_results.map((toolResult, trIndex) => {
                       if (toolResult.function_name === 'search_caregivers' && toolResult.result.caregivers) {
                         return (
-                          <div key={trIndex} className="flex justify-start">
-                            <div className="max-w-[85%] w-full">
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                {toolResult.result.caregivers.map((caregiver) => (
-                                  <Card key={caregiver.id} className="hover:shadow-lg transition-shadow border-l-4 border-teal-500">
-                                    <CardContent className="p-4">
-                                      <div className="space-y-2">
-                                        <div className="flex items-start justify-between">
-                                          <div className="flex-1">
-                                            <h4 className="font-semibold text-sm text-gray-900 mb-1">
-                                              {caregiver.business_name}
-                                            </h4>
-                                            <p className="text-xs text-gray-600">{caregiver.full_name}</p>
-                                          </div>
-                                          <div className="text-right">
-                                            <div className="text-lg font-bold text-teal-600">
-                                              {Math.round(caregiver.match_score)}%
+                          <div key={trIndex} className="w-full">
+                            {/* Section Header */}
+                            <div className="mb-3 pl-2">
+                              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                Recommended Caregivers ({toolResult.result.caregivers.length})
+                              </p>
+                            </div>
+                            
+                            {/* Horizontal Scrollable Cards */}
+                            <div className="overflow-x-auto pb-2">
+                              <div className="flex gap-4 min-w-max pr-4">
+                                {toolResult.result.caregivers.map((caregiver, idx) => (
+                                  <Card 
+                                    key={caregiver.id} 
+                                    className="hover:shadow-xl transition-all hover:scale-[1.02] border-l-4 border-teal-500 w-[320px] flex-shrink-0"
+                                  >
+                                    <CardContent className="p-5">
+                                      <div className="space-y-3">
+                                        {/* Header with Match Badge */}
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                              <span className="text-xs font-bold bg-teal-100 text-teal-700 px-2 py-0.5 rounded">
+                                                #{idx + 1}
+                                              </span>
+                                              <h4 className="font-bold text-sm text-gray-900 truncate">
+                                                {caregiver.business_name}
+                                              </h4>
                                             </div>
-                                            <p className="text-xs text-gray-500">Match</p>
+                                            <p className="text-xs text-gray-600 truncate">{caregiver.full_name}</p>
+                                            <p className="text-xs text-teal-600 font-medium mt-0.5 truncate">
+                                              {caregiver.specialization}
+                                            </p>
+                                          </div>
+                                          <div className="text-center bg-teal-50 rounded-lg px-3 py-2 flex-shrink-0">
+                                            <div className="text-2xl font-bold text-teal-600">
+                                              {Math.round(caregiver.match_score)}
+                                            </div>
+                                            <p className="text-[10px] text-gray-600 font-medium">% Match</p>
                                           </div>
                                         </div>
                                         
-                                        <div className="flex items-center gap-2 text-xs text-gray-600">
-                                          <span className="flex items-center gap-1">
+                                        {/* Stats */}
+                                        <div className="flex items-center gap-3 text-xs text-gray-600 py-2 border-y border-gray-100">
+                                          <span className="flex items-center gap-1 font-medium">
                                             ⭐ {caregiver.rating}/5
                                           </span>
-                                          <span>•</span>
-                                          <span>{caregiver.years_of_experience} yrs</span>
+                                          <span className="text-gray-300">|</span>
+                                          <span className="font-medium">{caregiver.years_of_experience} yrs exp</span>
+                                          <span className="text-gray-300">|</span>
+                                          <span className="font-medium">{caregiver.total_consultations}+ patients</span>
                                         </div>
                                         
-                                        <div className="flex items-center gap-1 text-xs text-gray-600">
-                                          <MapPin className="w-3 h-3" />
-                                          <span className="truncate">{caregiver.business_city}, {caregiver.business_state}</span>
+                                        {/* Location */}
+                                        <div className="flex items-center gap-1.5 text-xs text-gray-700">
+                                          <MapPin className="w-3.5 h-3.5 text-teal-600 flex-shrink-0" />
+                                          <span className="font-medium truncate">{caregiver.business_city}, {caregiver.business_state}</span>
                                         </div>
                                         
-                                        <div className="pt-2 border-t border-gray-100">
-                                          <div className="flex flex-wrap gap-1">
+                                        {/* Consultation Modes */}
+                                        <div className="pt-1">
+                                          <div className="flex flex-wrap gap-1.5">
                                             {caregiver.consultation_modes?.split(',').map((mode, idx) => (
-                                              <span key={idx} className="text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded">
-                                                {mode.trim()}
+                                              <span 
+                                                key={idx} 
+                                                className="text-xs bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-700 px-2.5 py-1 rounded-full font-medium border border-teal-100"
+                                              >
+                                                {mode.trim() === 'chat' && '💬'}
+                                                {mode.trim() === 'video' && '📹'}
+                                                {mode.trim() === 'in-person' && '🏥'}
+                                                {' '}{mode.trim()}
                                               </span>
                                             ))}
                                           </div>
                                         </div>
                                         
+                                        {/* Book Button */}
                                         <Button
                                           size="sm"
-                                          className="w-full bg-teal-600 hover:bg-teal-700 text-xs"
+                                          className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all"
                                           onClick={() => {
                                             // TODO: Book consultation
                                             alert(`Booking consultation with ${caregiver.business_name}`);
                                           }}
                                         >
-                                          Book Consultation
+                                          📅 Book Consultation
                                         </Button>
                                       </div>
                                     </CardContent>
                                   </Card>
                                 ))}
                               </div>
+                            </div>
+                            
+                            {/* Scroll Hint */}
+                            <div className="mt-2 text-center">
+                              <p className="text-xs text-gray-400">← Scroll to see all caregivers →</p>
                             </div>
                           </div>
                         );
