@@ -430,16 +430,16 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
                                           </div>
                                         </div>
                                         
-                                        {/* Book Button */}
+                                        {/* Seek Care Button */}
                                         <Button
                                           size="sm"
                                           className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all"
                                           onClick={() => {
-                                            // TODO: Book consultation
-                                            alert(`Booking consultation with ${caregiver.business_name}`);
+                                            // TODO: Initiate care seeking process
+                                            alert(`Seeking care at ${caregiver.business_name}`);
                                           }}
                                         >
-                                          📅 Book Consultation
+                                          🏥 Seek Care
                                         </Button>
                                       </div>
                                     </CardContent>
