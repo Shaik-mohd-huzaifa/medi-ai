@@ -104,8 +104,7 @@ async def execute_tool_call(function_name: str, arguments: dict, db: Session) ->
     """Execute a tool/function call and return results"""
     if function_name == "search_caregivers":
         # Import here to avoid circular imports
-        from app.routes.caregivers import match_caregivers_logic
-        from app.schemas.caregivers import CaregiverMatchRequest
+        from app.routes.caregivers import match_caregivers_logic, CaregiverMatchRequest
         
         # Create request from arguments
         match_request = CaregiverMatchRequest(**arguments)
