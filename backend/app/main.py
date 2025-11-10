@@ -7,8 +7,10 @@ from app.routes.voice import router as voice_router
 from app.routes.websocket import router as websocket_router
 from app.routes.auth import router as auth_router
 from app.routes.caregivers import router as caregivers_router
+from app.routes.chat import router as chat_router
 from app.database import engine, Base
 from app.models.user import User, PatientProfile, CaregiverProfile
+from app.models.chat import Conversation, Message
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -34,6 +36,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router)
 app.include_router(caregivers_router)
+app.include_router(chat_router)
 app.include_router(openai_router)
 app.include_router(transcription_router)
 app.include_router(voice_router)

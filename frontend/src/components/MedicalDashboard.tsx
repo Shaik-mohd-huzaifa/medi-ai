@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Sidebar } from '@/components/Sidebar';
 import { VoiceCallModal } from '@/components/VoiceCallModal';
 import { CaregiverRecommendations } from '@/components/CaregiverRecommendations';
+import { ChatModal } from '@/components/ChatModal';
 import { Paperclip, Mic, Send, Mail, Calendar, Phone, LogOut, Users, MapPin } from 'lucide-react';
 import { bedrockApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,6 +29,7 @@ export default function MedicalDashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [showCaregiverRecommendations, setShowCaregiverRecommendations] = useState(false);
   const [recommendedCaregivers, setRecommendedCaregivers] = useState<any[]>([]);
+  const [activeChatCaregiver, setActiveChatCaregiver] = useState<{id: number; name: string; businessName: string} | null>(null);
 
   const handleLogout = () => {
     logout();
@@ -211,6 +213,17 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
         <CaregiverRecommendations
           caregivers={recommendedCaregivers}
           onClose={() => setShowCaregiverRecommendations(false)}
+        />
+      )}
+
+      {/* Chat Modal */}
+      {activeChatCaregiver && (
+        <ChatModal
+          isOpen={true}
+          onClose={() => setActiveChatCaregiver(null)}
+          caregiverId={activeChatCaregiver.id}
+          caregiverName={activeChatCaregiver.name}
+          caregiverBusinessName={activeChatCaregiver.businessName}
         />
       )}
 
@@ -435,11 +448,14 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
                                           size="sm"
                                           className="w-full bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all"
                                           onClick={() => {
-                                            // TODO: Initiate care seeking process
-                                            alert(`Seeking care at ${caregiver.business_name}`);
+                                            setActiveChatCaregiver({
+                                              id: caregiver.id,
+                                              name: caregiver.full_name,
+                                              businessName: caregiver.business_name
+                                            });
                                           }}
                                         >
-                                          🏥 Seek Care
+                                          💬 Chat Now
                                         </Button>
                                       </div>
                                     </CardContent>
