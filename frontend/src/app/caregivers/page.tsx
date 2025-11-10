@@ -21,6 +21,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { bedrockApi } from '@/services/api';
+import { ChatModal } from '@/components/ChatModal';
 
 interface Caregiver {
   id: number;
@@ -47,6 +48,7 @@ export default function CaregiversPage() {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState('');
   const [selectedType, setSelectedType] = useState('');
+  const [activeChatCaregiver, setActiveChatCaregiver] = useState<{id: number; name: string; businessName: string} | null>(null);
 
   useEffect(() => {
     fetchCaregivers();
@@ -132,8 +134,17 @@ export default function CaregiversPage() {
   };
 
   const handleBookConsultation = (caregiver: Caregiver, mode: string) => {
-    // TODO: Implement booking functionality
-    alert(`Booking ${mode} consultation with ${caregiver.business_name}`);
+    if (mode === 'chat') {
+      // Open chat modal for real-time messaging
+      setActiveChatCaregiver({
+        id: caregiver.id,
+        name: caregiver.full_name,
+        businessName: caregiver.business_name
+      });
+    } else {
+      // TODO: Implement video/in-person booking
+      alert(`Booking ${mode} consultation with ${caregiver.business_name}`);
+    }
   };
 
   // Get unique values for filters
@@ -399,6 +410,17 @@ export default function CaregiversPage() {
           )}
         </div>
       </div>
+
+      {/* Chat Modal */}
+      {activeChatCaregiver && (
+        <ChatModal
+          isOpen={true}
+          onClose={() => setActiveChatCaregiver(null)}
+          caregiverId={activeChatCaregiver.id}
+          caregiverName={activeChatCaregiver.name}
+          caregiverBusinessName={activeChatCaregiver.businessName}
+        />
+      )}
     </ProtectedRoute>
   );
 }
