@@ -20,6 +20,7 @@ import {
   Activity
 } from 'lucide-react';
 import { bedrockApi } from '@/services/api';
+import { CaregiverChatPanel } from '@/components/CaregiverChatPanel';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -474,78 +475,14 @@ Remember: You're assisting licensed healthcare professionals who have final clin
           </>
         ) : (
           <>
-            {/* Chat Assistant View */}
+            {/* Patient Chat View */}
             <div className="bg-white border-b border-gray-200 p-6">
-              <h1 className="text-2xl font-bold text-gray-900">Medical AI Assistant</h1>
-              <p className="text-gray-500 mt-1">Get clinical decision support and medical information</p>
+              <h1 className="text-2xl font-bold text-gray-900">Patient Messages</h1>
+              <p className="text-gray-500 mt-1">Chat with patients in real-time</p>
             </div>
-
             <div className="flex-1 overflow-auto p-6">
-              <div className="max-w-4xl mx-auto">
-                <div className="space-y-4 mb-4">
-                  {messages.length === 0 && (
-                    <Card className="bg-gradient-to-br from-teal-50 to-blue-50 border-teal-200">
-                      <CardContent className="p-6">
-                        <h3 className="font-semibold text-lg mb-2">👋 Welcome, Healthcare Professional!</h3>
-                        <p className="text-gray-700 mb-4">
-                          I'm your AI medical assistant. I can help you with:
-                        </p>
-                        <ul className="space-y-2 text-sm text-gray-600">
-                          <li>• Clinical decision support and differential diagnoses</li>
-                          <li>• Evidence-based treatment recommendations</li>
-                          <li>• Patient triage and prioritization guidance</li>
-                          <li>• Drug interactions and dosage information</li>
-                          <li>• Medical research and clinical guidelines</li>
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  )}
-                  {messages.map((message, index) => (
-                    <div
-                      key={index}
-                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-4 ${
-                          message.role === 'user'
-                            ? 'bg-teal-600 text-white'
-                            : 'bg-white border border-gray-200'
-                        }`}
-                      >
-                        <p className="whitespace-pre-wrap">{message.content}</p>
-                      </div>
-                    </div>
-                  ))}
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2">
-                          <div className="animate-pulse">Analyzing...</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white border-t border-gray-200 p-4">
-              <div className="max-w-4xl mx-auto flex gap-2">
-                <Input
-                  value={userInput}
-                  onChange={(e) => setUserInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  placeholder="Ask about clinical decisions, treatments, patient cases..."
-                  className="flex-1"
-                  disabled={isLoading}
-                />
-                <Button 
-                  onClick={sendMessage} 
-                  disabled={isLoading || !userInput.trim()}
-                  className="bg-teal-600 hover:bg-teal-700"
-                >
-                  Send
-                </Button>
+              <div className="max-w-7xl mx-auto">
+                <CaregiverChatPanel />
               </div>
             </div>
           </>
