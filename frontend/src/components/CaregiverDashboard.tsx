@@ -99,6 +99,27 @@ export function CaregiverDashboard() {
     router.push('/auth');
   };
 
+  const handleAcceptRequest = (requestId: string) => {
+    // TODO: Update request status in database
+    alert(`Request ${requestId} accepted! In production, this would update the database and notify the patient.`);
+    // For now, just show the action worked
+  };
+
+  const handleViewDetails = (requestId: string) => {
+    // TODO: Show detailed patient information modal
+    alert(`Viewing details for request ${requestId}. In production, this would show full patient history.`);
+  };
+
+  const handleChatWithPatient = () => {
+    // Switch to chat view to see real patient conversations
+    setActiveView('chat');
+  };
+
+  const handleCompleteRequest = (requestId: string) => {
+    // TODO: Mark request as completed in database
+    alert(`Request ${requestId} marked as complete! In production, this would update the database.`);
+  };
+
   const sendMessage = async () => {
     if (!userInput.trim() || isLoading) return;
 
@@ -372,10 +393,19 @@ Remember: You're assisting licensed healthcare professionals who have final clin
                             </span>
                           </div>
                           <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">
-                            <Button size="sm" className="flex-1 bg-teal-600 hover:bg-teal-700">
+                            <Button 
+                              size="sm" 
+                              className="flex-1 bg-teal-600 hover:bg-teal-700"
+                              onClick={() => handleAcceptRequest(request.id)}
+                            >
                               Accept
                             </Button>
-                            <Button size="sm" variant="outline" className="flex-1">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={() => handleViewDetails(request.id)}
+                            >
                               Details
                             </Button>
                           </div>
@@ -420,10 +450,19 @@ Remember: You're assisting licensed healthcare professionals who have final clin
                             <p className="text-xs text-gray-600 mb-2">Assigned to: {request.assignedTo}</p>
                           )}
                           <div className="mt-3 pt-3 border-t border-gray-100 flex gap-2">
-                            <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
+                            <Button 
+                              size="sm" 
+                              className="flex-1 bg-green-600 hover:bg-green-700"
+                              onClick={() => handleCompleteRequest(request.id)}
+                            >
                               Complete
                             </Button>
-                            <Button size="sm" variant="outline" className="flex-1">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="flex-1"
+                              onClick={handleChatWithPatient}
+                            >
                               Chat
                             </Button>
                           </div>
