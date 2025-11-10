@@ -66,6 +66,12 @@ export function ChatModal({
     try {
       // Create or get conversation
       const token = localStorage.getItem('access_token');
+      
+      console.log('🔍 Chat Init - Token exists:', !!token);
+      console.log('🔍 Chat Init - Token preview:', token?.substring(0, 20) + '...');
+      console.log('🔍 Chat Init - Caregiver ID:', caregiverId);
+      console.log('🔍 Chat Init - User:', user);
+      
       const response = await fetch('http://localhost:8000/api/v1/chat/conversations', {
         method: 'POST',
         headers: {
@@ -78,8 +84,11 @@ export function ChatModal({
         })
       });
 
+      console.log('📥 Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Conversation created:', data);
         setConversationId(data.id);
 
         // Load message history
@@ -87,9 +96,14 @@ export function ChatModal({
 
         // Connect WebSocket
         connectWebSocket();
+      } else {
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('❌ Failed to create conversation:', response.status, errorData);
+        alert(`Failed to start chat: ${errorData.detail || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Error initializing chat:', error);
+      console.error('❌ Error initializing chat:', error);
+      alert(`Error starting chat: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
