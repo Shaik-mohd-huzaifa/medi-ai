@@ -38,6 +38,29 @@ export interface ApiResponse {
   };
   stop_reason?: string;
   error?: string;
+  tool_results?: Array<{
+    tool_call_id: string;
+    function_name: string;
+    arguments: Record<string, unknown>;
+    result: {
+      caregivers?: Array<{
+        id: number;
+        full_name: string;
+        business_name: string;
+        caregiver_type: string;
+        specialization: string;
+        consultation_modes: string;
+        years_of_experience: number;
+        rating: number;
+        total_consultations: number;
+        business_city: string;
+        business_state: string;
+        business_country: string;
+        match_score: number;
+      }>;
+      count?: number;
+    };
+  }>;
 }
 
 export const bedrockApi = {

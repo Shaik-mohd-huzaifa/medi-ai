@@ -39,12 +39,9 @@ class CaregiverMatchRequest(BaseModel):
     limit: int = 3
 
 
-@router.post("/match", response_model=List[CaregiverResponse])
-async def match_caregivers(
-    request: CaregiverMatchRequest,
-    db: Session = Depends(get_db)
-):
+async def match_caregivers_logic(request: CaregiverMatchRequest, db: Session) -> List[dict]:
     """
+    Core logic for matching caregivers. Can be called from API or other services.
     Match caregivers based on patient needs, location, symptoms, and other criteria.
     Returns top matching caregivers sorted by match score.
     """
@@ -109,6 +106,14 @@ async def match_caregivers(
 
     # Return top N caregivers
     return matched_caregivers[:request.limit]
+
+
+@router.post("/match", response_model=List[CaregiverResponse])
+async def match_caregivers(request: CaregiverMatchRequest, db: Session = Depends(get_db)):
+    """
+    API endpoint to match caregivers based on patient needs.
+    """
+    return await match_caregivers_logic(request, db)
 
 
 def calculate_match_score(

@@ -8,13 +8,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Sidebar } from '@/components/Sidebar';
 import { VoiceCallModal } from '@/components/VoiceCallModal';
 import { CaregiverRecommendations } from '@/components/CaregiverRecommendations';
-import { Paperclip, Mic, Send, Mail, Calendar, Phone, LogOut, Users } from 'lucide-react';
+import { Paperclip, Mic, Send, Mail, Calendar, Phone, LogOut, Users, MapPin } from 'lucide-react';
 import { bedrockApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  tool_results?: any[];
 }
 
 export default function MedicalDashboard() {
@@ -154,7 +155,18 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
       console.log('📥 Response received:', response);
 
       if (response.success && response.content) {
-        setMessages(prev => [...prev, { role: 'assistant', content: response.content || '' }]);
+        const assistantMessage: Message = { 
+          role: 'assistant', 
+          content: response.content || '' 
+        };
+        
+        // Add tool results if present (for caregiver search, etc.)
+        if (response.tool_results && response.tool_results.length > 0) {
+          assistantMessage.tool_results = response.tool_results;
+          console.log('🛠️ Tool results received:', response.tool_results);
+        }
+        
+        setMessages(prev => [...prev, assistantMessage]);
       } else {
         console.error('❌ Response not successful:', response);
         setMessages(prev => [...prev, { 
@@ -318,23 +330,96 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
               /* Chat Messages */
               <div className="space-y-6">
                 {messages.map((message, index) => (
-                  <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-lg p-4 ${
-                      message.role === 'user' 
-                        ? 'bg-teal-600 text-white' 
-                        : 'bg-gray-100 text-gray-900'
-                    }`}>
-                      <div className="flex items-start gap-3">
-                        {message.role === 'assistant' && (
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 flex items-center justify-center text-xs flex-shrink-0">
-                            🤖
+                  <div key={index} className="space-y-3">
+                    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] rounded-lg p-4 ${
+                        message.role === 'user' 
+                          ? 'bg-teal-600 text-white' 
+                          : 'bg-gray-100 text-gray-900'
+                      }`}>
+                        <div className="flex items-start gap-3">
+                          {message.role === 'assistant' && (
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-teal-400 to-cyan-400 flex items-center justify-center text-xs flex-shrink-0">
+                              🤖
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                           </div>
-                        )}
-                        <div className="flex-1">
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Tool Results Display */}
+                    {message.tool_results && message.tool_results.map((toolResult, trIndex) => {
+                      if (toolResult.function_name === 'search_caregivers' && toolResult.result.caregivers) {
+                        return (
+                          <div key={trIndex} className="flex justify-start">
+                            <div className="max-w-[85%] w-full">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {toolResult.result.caregivers.map((caregiver) => (
+                                  <Card key={caregiver.id} className="hover:shadow-lg transition-shadow border-l-4 border-teal-500">
+                                    <CardContent className="p-4">
+                                      <div className="space-y-2">
+                                        <div className="flex items-start justify-between">
+                                          <div className="flex-1">
+                                            <h4 className="font-semibold text-sm text-gray-900 mb-1">
+                                              {caregiver.business_name}
+                                            </h4>
+                                            <p className="text-xs text-gray-600">{caregiver.full_name}</p>
+                                          </div>
+                                          <div className="text-right">
+                                            <div className="text-lg font-bold text-teal-600">
+                                              {Math.round(caregiver.match_score)}%
+                                            </div>
+                                            <p className="text-xs text-gray-500">Match</p>
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                                          <span className="flex items-center gap-1">
+                                            ⭐ {caregiver.rating}/5
+                                          </span>
+                                          <span>•</span>
+                                          <span>{caregiver.years_of_experience} yrs</span>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-1 text-xs text-gray-600">
+                                          <MapPin className="w-3 h-3" />
+                                          <span className="truncate">{caregiver.business_city}, {caregiver.business_state}</span>
+                                        </div>
+                                        
+                                        <div className="pt-2 border-t border-gray-100">
+                                          <div className="flex flex-wrap gap-1">
+                                            {caregiver.consultation_modes?.split(',').map((mode, idx) => (
+                                              <span key={idx} className="text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded">
+                                                {mode.trim()}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                        
+                                        <Button
+                                          size="sm"
+                                          className="w-full bg-teal-600 hover:bg-teal-700 text-xs"
+                                          onClick={() => {
+                                            // TODO: Book consultation
+                                            alert(`Booking consultation with ${caregiver.business_name}`);
+                                          }}
+                                        >
+                                          Book Consultation
+                                        </Button>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
                   </div>
                 ))}
                 {isLoading && (
