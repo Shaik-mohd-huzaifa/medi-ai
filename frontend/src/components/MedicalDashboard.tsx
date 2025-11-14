@@ -71,7 +71,7 @@ export default function MedicalDashboard() {
       const payload = {
         messages: [
           {
-            role: 'system',
+            role: 'system' as const,
             content: `You are AIRA (AI Responsive & Intelligent Assistant), a comprehensive medical AI assistant designed to provide thoughtful, structured healthcare guidance.
 
 **Your Primary Responsibilities:**
@@ -141,9 +141,9 @@ export default function MedicalDashboard() {
 
 Remember: Patient safety is paramount. When in doubt, always err on the side of recommending professional medical consultation.`,
           },
-          ...messages.map(m => ({ role: m.role, content: m.content })),
+          ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
           {
-            role: 'user',
+            role: 'user' as const,
             content: userMessage.content,
           },
         ],
@@ -378,7 +378,7 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
                             {/* Horizontal Scrollable Cards */}
                             <div className="overflow-x-auto pb-2">
                               <div className="flex gap-4 min-w-max pr-4">
-                                {toolResult.result.caregivers.map((caregiver, idx) => (
+                                {toolResult.result.caregivers.map((caregiver: any, idx: number) => (
                                   <Card 
                                     key={caregiver.id} 
                                     className="hover:shadow-xl transition-all hover:scale-[1.02] border-l-4 border-teal-500 w-[320px] flex-shrink-0"
@@ -429,7 +429,7 @@ Remember: Patient safety is paramount. When in doubt, always err on the side of 
                                         {/* Consultation Modes */}
                                         <div className="pt-1">
                                           <div className="flex flex-wrap gap-1.5">
-                                            {caregiver.consultation_modes?.split(',').map((mode, idx) => (
+                                            {caregiver.consultation_modes?.split(',').map((mode: string, idx: number) => (
                                               <span 
                                                 key={idx} 
                                                 className="text-xs bg-gradient-to-r from-teal-50 to-cyan-50 text-teal-700 px-2.5 py-1 rounded-full font-medium border border-teal-100"

@@ -16,12 +16,17 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
   const [assistantResponse, setAssistantResponse] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
+  const [errorMessage, setErrorMessage] = useState('');
   
   const wsRef = useRef<WebSocket | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 3;
 
   // Play audio from blob
   const playAudioBlob = useCallback(async (audioBlob: Blob) => {
@@ -45,12 +50,51 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
     }
   }, []);
 
+  // Cleanup function
+  const cleanup = useCallback(() => {
+    // Clear intervals and timeouts
+    if (pingIntervalRef.current) {
+      clearInterval(pingIntervalRef.current);
+      pingIntervalRef.current = null;
+    }
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    // Stop media recorder
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    
+    // Stop audio playback
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    
+    // Cancel any speech synthesis
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    // Close WebSocket
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+  }, []);
+
   // Initialize WebSocket connection
   const connectWebSocket = useCallback(() => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
+      return;
+    }
 
-    console.log('Attempting to connect to WebSocket...');
+    console.log(`Attempting to connect to WebSocket... (Attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
     setConnectionStatus('connecting');
+    setErrorMessage('');
     
     try {
       const ws = new WebSocket('ws://localhost:8000/ws/voice');
@@ -58,8 +102,16 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
       ws.onopen = () => {
         console.log('✅ WebSocket connected successfully!');
         setConnectionStatus('connected');
+        reconnectAttemptsRef.current = 0;
+        setErrorMessage('');
         
-        // Just show ready status - no auto greeting
+        // Start ping/pong heartbeat to keep connection alive
+        pingIntervalRef.current = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'ping' }));
+          }
+        }, 30000); // Ping every 30 seconds
+        
         console.log('Ready for voice input!');
       };
     
@@ -94,7 +146,15 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
           console.error('WebSocket error:', data.message);
           setIsProcessing(false);
           setIsSpeaking(false);
-          alert('Error: ' + data.message);
+          setErrorMessage(data.message);
+          
+          // Show error briefly
+          setTimeout(() => setErrorMessage(''), 5000);
+          break;
+          
+        case 'pong':
+          // Heartbeat response - connection is alive
+          console.log('Pong received');
           break;
           
         case 'end':
@@ -109,32 +169,64 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
     ws.onerror = (error) => {
       console.error('❌ WebSocket error:', error);
       console.error('Make sure backend is running on http://localhost:8000');
-      setConnectionStatus('disconnected');
-      alert('Failed to connect to voice server. Make sure the backend is running on port 8000.');
+      setConnectionStatus('error');
+      setErrorMessage('Connection error. Please check if backend is running.');
     };
     
     ws.onclose = (event) => {
       console.log('WebSocket disconnected. Code:', event.code, 'Reason:', event.reason);
       setConnectionStatus('disconnected');
+      
+      // Clear ping interval
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+      
+      // Attempt reconnection if modal is still open and not intentionally closed
+      if (isOpen && event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
+        reconnectAttemptsRef.current++;
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current - 1), 5000);
+        console.log(`Reconnecting in ${delay}ms...`);
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          console.log('Attempting reconnection...');
+          connectWebSocket();
+        }, delay);
+      } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+        setConnectionStatus('error');
+        setErrorMessage('Failed to connect after multiple attempts. Please close and try again.');
+      }
     };
     
       wsRef.current = ws;
     } catch (error) {
       console.error('❌ Failed to create WebSocket:', error);
-      setConnectionStatus('disconnected');
-      alert('Failed to connect to voice server. Error: ' + error);
+      setConnectionStatus('error');
+      setErrorMessage('Failed to create connection: ' + error);
+      
+      // Retry connection
+      if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+        reconnectAttemptsRef.current++;
+        reconnectTimeoutRef.current = setTimeout(() => {
+          connectWebSocket();
+        }, 2000);
+      }
     }
-  }, [onClose, playAudioBlob]);
+  }, [isOpen, playAudioBlob]);
 
 
   // Send audio to server via WebSocket
   const sendAudio = useCallback(async (audioBlob: Blob) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       console.error('WebSocket not connected');
+      setErrorMessage('Not connected to server. Reconnecting...');
+      connectWebSocket();
       return;
     }
 
     setIsProcessing(true);
+    setErrorMessage('');
     
     // Convert blob to base64
     const reader = new FileReader();
@@ -148,7 +240,7 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
       }));
     };
     reader.readAsDataURL(audioBlob);
-  }, []);
+  }, [connectWebSocket]);
 
   // Start recording
   const startListening = async () => {
@@ -218,54 +310,31 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
       setIsProcessing(false);
       setIsSpeaking(false);
       setIsListening(false);
+      setErrorMessage('');
+      reconnectAttemptsRef.current = 0;
       
       // Connect to WebSocket
       connectWebSocket();
+    } else {
+      // Clean up when modal closes
+      cleanup();
     }
     
     return () => {
-      // Cleanup
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
+      cleanup();
     };
-  }, [isOpen, connectWebSocket]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        mediaRecorderRef.current.stop();
-      }
-      if (currentAudioRef.current) {
-        currentAudioRef.current.pause();
-        currentAudioRef.current = null;
-      }
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
+      cleanup();
     };
-  }, []);
+  }, [cleanup]);
 
   const handleClose = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current = null;
-    }
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    cleanup();
     
     // Reset all states
     setIsListening(false);
@@ -274,6 +343,8 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
     setCurrentTranscript('');
     setAssistantResponse('');
     setConnectionStatus('disconnected');
+    setErrorMessage('');
+    reconnectAttemptsRef.current = 0;
     
     onClose();
   };
@@ -298,7 +369,9 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
                       : 'bg-green-600'
                   : connectionStatus === 'connecting'
                     ? 'bg-yellow-600 animate-pulse'
-                    : 'bg-gray-400'
+                    : connectionStatus === 'error'
+                      ? 'bg-red-600'
+                      : 'bg-gray-400'
               }`} />
               <span className="text-sm text-slate-600">
                 {connectionStatus === 'connected'
@@ -311,7 +384,9 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
                         : 'Connected'
                   : connectionStatus === 'connecting'
                     ? 'Connecting...'
-                    : 'Disconnected'}
+                    : connectionStatus === 'error'
+                      ? 'Connection Error'
+                      : 'Disconnected'}
               </span>
             </div>
           </div>
@@ -327,8 +402,18 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
             </div>
           </div>
 
+          {/* Error message */}
+          {errorMessage && (
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 rounded-lg border border-red-200">
+                <div className="w-2 h-2 bg-red-600 rounded-full" />
+                <span className="text-sm text-red-700 font-medium">{errorMessage}</span>
+              </div>
+            </div>
+          )}
+
           {/* Visual indicator only - no text displayed */}
-          {currentTranscript && (
+          {currentTranscript && !errorMessage && (
             <div className="text-center">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 rounded-full">
                 <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
@@ -337,7 +422,7 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
             </div>
           )}
 
-          {assistantResponse && !isSpeaking && (
+          {assistantResponse && !isSpeaking && !errorMessage && (
             <div className="text-center">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 rounded-full">
                 <div className="w-2 h-2 bg-purple-600 rounded-full" />
@@ -370,6 +455,7 @@ export function VoiceCallModal({ isOpen, onClose }: VoiceCallModalProps) {
               onClick={toggleListening}
               size="lg"
               disabled={isProcessing || connectionStatus !== 'connected'}
+              title={connectionStatus !== 'connected' ? 'Waiting for connection...' : isListening ? 'Stop recording' : 'Start recording'}
               className={`w-16 h-16 rounded-full ${
                 isListening ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-indigo-600 hover:bg-indigo-700'
               }`}

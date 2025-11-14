@@ -132,7 +132,7 @@ export function CaregiverDashboard() {
       const payload = {
         messages: [
           {
-            role: 'system',
+            role: 'system' as const,
             content: `You are AIRA Medical Professional Assistant, an AI designed specifically to support healthcare providers (doctors, nurses, caregivers) in their clinical practice.
 
 **Your Role & Capabilities:**
@@ -189,9 +189,9 @@ export function CaregiverDashboard() {
 
 Remember: You're assisting licensed healthcare professionals who have final clinical decision-making authority.`,
           },
-          ...messages.map(m => ({ role: m.role, content: m.content })),
+          ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
           {
-            role: 'user',
+            role: 'user' as const,
             content: userMessage.content,
           },
         ],
