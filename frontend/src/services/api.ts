@@ -38,6 +38,29 @@ export interface ApiResponse {
   };
   stop_reason?: string;
   error?: string;
+  tool_results?: Array<{
+    tool_call_id: string;
+    function_name: string;
+    arguments: Record<string, unknown>;
+    result: {
+      caregivers?: Array<{
+        id: number;
+        full_name: string;
+        business_name: string;
+        caregiver_type: string;
+        specialization: string;
+        consultation_modes: string;
+        years_of_experience: number;
+        rating: number;
+        total_consultations: number;
+        business_city: string;
+        business_state: string;
+        business_country: string;
+        match_score: number;
+      }>;
+      count?: number;
+    };
+  }>;
 }
 
 export const bedrockApi = {
@@ -59,10 +82,18 @@ export const bedrockApi = {
    */
   async chatCompletion(payload: ChatRequest): Promise<ApiResponse> {
     try {
+      console.log('🔄 API: Sending POST to /api/v1/bedrock/chat');
+      console.log('🔄 API: Base URL:', API_BASE_URL);
+      console.log('🔄 API: Payload:', payload);
+      
       const response = await apiClient.post('/api/v1/bedrock/chat', payload);
+      
+      console.log('✅ API: Response received:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Error in chat completion:', error);
+    } catch (error: any) {
+      console.error('❌ API: Error in chat completion:', error);
+      console.error('❌ API: Error response:', error.response?.data);
+      console.error('❌ API: Error status:', error.response?.status);
       throw error;
     }
   },
@@ -185,6 +216,50 @@ export const bedrockApi = {
       return response.data;
     } catch (error) {
       console.error('Error crawling website:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Match caregivers based on patient needs
+   */
+  async matchCaregivers(params: {
+    symptoms?: string;
+    urgency?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    consultation_mode?: string;
+    specialization?: string;
+    limit?: number;
+  }): Promise<any> {
+    try {
+      const response = await apiClient.post('/api/v1/caregivers/match', params);
+      return response.data;
+    } catch (error) {
+      console.error('Error matching caregivers:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * List all caregivers with optional filters
+   */
+  async listCaregivers(params?: {
+    city?: string;
+    state?: string;
+    country?: string;
+    specialization?: string;
+    limit?: number;
+  }): Promise<any> {
+    try {
+      const queryParams = new URLSearchParams(
+        Object.entries(params || {}).filter(([_, v]) => v != null).map(([k, v]) => [k, String(v)])
+      );
+      const response = await apiClient.get(`/api/v1/caregivers/list?${queryParams}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error listing caregivers:', error);
       throw error;
     }
   },

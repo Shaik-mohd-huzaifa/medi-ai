@@ -18,6 +18,14 @@ class Settings(BaseSettings):
     # Firecrawl Configuration
     firecrawl_api_key: Optional[str] = None
 
+    # Database Configuration
+    database_url: Optional[str] = "sqlite:///./medi_ai.db"
+
+    # Authentication Configuration
+    secret_key: str = "your-secret-key-change-in-production"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+
     # API Configuration
     api_title: str = "Medi-AI FastAPI Backend"
     api_version: str = "1.0.0"

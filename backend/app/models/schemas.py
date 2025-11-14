@@ -78,7 +78,7 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    """Response model for chat completion."""
+    """Response model for chat completion with function calling support."""
 
     success: bool = Field(..., description="Whether the request was successful")
     content: Optional[str] = Field(None, description="Generated response content")
@@ -86,6 +86,7 @@ class ChatResponse(BaseModel):
     usage: Optional[Dict[str, Any]] = Field(None, description="Token usage information")
     stop_reason: Optional[str] = Field(None, description="Reason for stopping generation")
     error: Optional[str] = Field(None, description="Error message if failed")
+    tool_results: Optional[List[Dict[str, Any]]] = Field(None, description="Results from tool/function calls")
 
 
 class ErrorResponse(BaseModel):

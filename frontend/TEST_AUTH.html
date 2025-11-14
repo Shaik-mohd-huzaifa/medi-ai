@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Auth</title>
+</head>
+<body>
+    <h1>Authentication Test</h1>
+    <button onclick="testAuth()">Test Auth</button>
+    <button onclick="testConversation()">Test Create Conversation</button>
+    <pre id="output"></pre>
+
+    <script>
+        const output = document.getElementById('output');
+
+        async function testAuth() {
+            const token = localStorage.getItem('access_token');
+            output.textContent = 'Testing auth...\n';
+            output.textContent += `Token: ${token ? token.substring(0, 50) + '...' : 'NULL'}\n\n`;
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                output.textContent += `Status: ${response.status}\n`;
+                const data = await response.json();
+                output.textContent += `Response: ${JSON.stringify(data, null, 2)}\n`;
+            } catch (error) {
+                output.textContent += `Error: ${error.message}\n`;
+            }
+        }
+
+        async function testConversation() {
+            const token = localStorage.getItem('access_token');
+            output.textContent = 'Testing conversation creation...\n';
+            output.textContent += `Token: ${token ? token.substring(0, 50) + '...' : 'NULL'}\n\n`;
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/chat/conversations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        caregiver_id: 5,
+                        initial_message: "Test message"
+                    })
+                });
+
+                output.textContent += `Status: ${response.status}\n`;
+                const data = await response.json();
+                output.textContent += `Response: ${JSON.stringify(data, null, 2)}\n`;
+            } catch (error) {
+                output.textContent += `Error: ${error.message}\n`;
+            }
+        }
+
+        // Auto-check on load
+        window.onload = () => {
+            const token = localStorage.getItem('access_token');
+            const user = localStorage.getItem('user');
+            output.textContent = `=== INITIAL CHECK ===\n`;
+            output.textContent += `Token exists: ${!!token}\n`;
+            output.textContent += `User exists: ${!!user}\n`;
+            if (user) {
+                output.textContent += `User: ${user}\n`;
+            }
+            output.textContent += `\nClick buttons above to test!\n`;
+        };
+    </script>
+</body>
+</html>

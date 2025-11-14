@@ -1,0 +1,93 @@
+from datetime import datetime, timedelta
+from typing import Optional
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from app.config import settings
+from app.database import get_db
+from app.models.user import User
+from app.schemas.auth import TokenData
+
+# Password hashing
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# OAuth2 scheme
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a password against its hash"""
+    # Truncate password to 72 bytes for bcrypt compatibility
+    plain_password = plain_password[:72]
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password: str) -> str:
+    """Hash a password"""
+    # Truncate password to 72 bytes for bcrypt compatibility
+    password = password[:72]
+    return pwd_context.hash(password)
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """Create JWT access token"""
+    to_encode = data.copy()
+    
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
+    
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+    
+    return encoded_jwt
+
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> User:
+    """Get current authenticated user from JWT token"""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        print(f"🔍 Validating token: {token[:30]}...")
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        email: str = payload.get("sub")
+        print(f"✅ Token decoded, email: {email}")
+        
+        if email is None:
+            print("❌ Email not found in token payload")
+            raise credentials_exception
+        
+        token_data = TokenData(email=email)
+    except JWTError as e:
+        print(f"❌ JWT Error: {str(e)}")
+        raise credentials_exception
+    except Exception as e:
+        print(f"❌ Unexpected error during token decode: {str(e)}")
+        raise credentials_exception
+    
+    user = db.query(User).filter(User.email == token_data.email).first()
+    
+    if user is None:
+        print(f"❌ User not found for email: {token_data.email}")
+        raise credentials_exception
+    
+    print(f"✅ User authenticated: {user.email} (ID: {user.id})")
+    return user
+
+
+def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
+    """Get current active user"""
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Inactive user")
+    
+    return current_user
